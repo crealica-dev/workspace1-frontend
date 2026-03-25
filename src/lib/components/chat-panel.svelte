@@ -1,7 +1,7 @@
 <script lang="ts">
 import { Button } from "$lib/components/ui/button/index.js";
 import { Textarea } from "$lib/components/ui/textarea/index.js";
-import * as Badge from "$lib/components/ui/badge/index.js";
+import { Badge } from "$lib/components/ui/badge/index.js";
 import { Separator } from "$lib/components/ui/separator/index.js";
 import {
 Bot,
@@ -168,17 +168,17 @@ aria-hidden={!isOpen}
 <p class="text-muted-foreground mt-0.5 text-[11px]">Multimodal · Context-aware</p>
 </div>
 {#if isGenerating}
-<Badge.Root variant="secondary" class="ms-auto gap-1 text-[11px]">
+<Badge variant="secondary" class="ms-auto gap-1 text-[11px]">
 <Loader2 class="size-3 animate-spin" />
 Thinking
-</Badge.Root>
+</Badge>
 {:else}
-<Badge.Root
+<Badge
 variant="secondary"
 class="ms-auto text-[11px] text-emerald-600 dark:text-emerald-400"
 >
 ● Online
-</Badge.Root>
+</Badge>
 {/if}
 <button
 onclick={togglePanel}

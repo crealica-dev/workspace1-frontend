@@ -65,6 +65,21 @@ function clearNotice() {
 	noticeStore.set(null);
 }
 
+async function clearExpiredSession(
+	message = 'Your session expired. Sign in again.',
+): Promise<void> {
+	await init();
+
+	if (hasSupabaseConfig) {
+		const supabase = getSupabaseClient();
+		await supabase.auth.signOut({ scope: 'local' }).catch(() => undefined);
+	}
+
+	sessionStore.set(null);
+	loadingStore.set(false);
+	noticeStore.set({ type: 'info', message });
+}
+
 async function signInWithPassword(email: string, password: string): Promise<boolean> {
 	await init();
 
@@ -162,5 +177,6 @@ export const auth = {
 	signInWithPassword,
 	signUpWithPassword,
 	signOut,
+	clearExpiredSession,
 	getSessionSnapshot,
 };

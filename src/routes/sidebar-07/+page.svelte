@@ -3,10 +3,15 @@
 	import * as Breadcrumb from "$lib/components/ui/breadcrumb/index.js";
 	import { Separator } from "$lib/components/ui/separator/index.js";
 	import * as Sidebar from "$lib/components/ui/sidebar/index.js";
+
+	const demoUser = {
+		name: "Workspace Demo",
+		email: "demo@example.com",
+	};
 </script>
 
 <Sidebar.Provider>
-	<AppSidebar />
+	<AppSidebar user={demoUser} />
 	<Sidebar.Inset>
 		<header
 			class="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12"

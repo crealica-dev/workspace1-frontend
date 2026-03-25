@@ -12,6 +12,7 @@
 	let {
 		class: className,
 		isLoading = false,
+		disabled = false,
 		value,
 		onValueChange,
 		maxHeight = 240,
@@ -28,7 +29,7 @@
 		onValueChange: untrack(() => onValueChange),
 		maxHeight: untrack(() => maxHeight),
 		onSubmit: untrack(() => onSubmit),
-		disabled: untrack(() => isLoading),
+		disabled: untrack(() => disabled || isLoading),
 	});
 
 	setPromptInputContext(contextInstance);
@@ -39,10 +40,10 @@
 	// 	contextInstance.disabled = isLoading;
 	// });
 	watch(
-		() => isLoading,
+		() => [isLoading, disabled],
 		() => {
 			contextInstance.isLoading = isLoading;
-			contextInstance.disabled = isLoading;
+			contextInstance.disabled = disabled || isLoading;
 		}
 	);
 
