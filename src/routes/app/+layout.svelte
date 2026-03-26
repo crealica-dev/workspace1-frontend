@@ -116,7 +116,7 @@
 					<span
 						class="flex size-8 items-center justify-center rounded-full transition-[background-color,transform] duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] {sidebarOpen ? 'bg-primary-foreground/20 scale-105' : 'bg-primary/10'}"
 					>
-						<img src="/brand/acheulit-logo.png" alt="" class="size-5 rounded-full object-contain" />
+						<img src="/brand/acheulit-logo.png" alt="" class="size-5 rounded-full object-contain transition-[filter] duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] {sidebarOpen ? 'brightness-0 invert' : ''}" />
 					</span>
 					<span class="mx-1 text-sm font-semibold tracking-tight transition-colors duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]">
 						{sidebarOpen ? 'Close' : 'Menu'}
