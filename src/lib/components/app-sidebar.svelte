@@ -38,7 +38,6 @@
 
 <script lang="ts">
 	import {
-		sidebarActionButtonClass,
 		sidebarBrandCollapsedButtonClass,
 		sidebarBrandCollapsedLogoClass,
 		sidebarBrandExpandedClass,
@@ -52,12 +51,11 @@
 		workspaceStatusTone,
 	} from "$lib/design/index.js";
 	import { Badge } from "$lib/components/ui/badge/index.js";
-	import { Button } from "$lib/components/ui/button/index.js";
 	import * as Sidebar from "$lib/components/ui/sidebar/index.js";
 	import { projectStore } from "$lib/stores/project.svelte";
 	import NavMain from "./nav-main.svelte";
 	import NavUser from "./nav-user.svelte";
-	import SparklesIcon from "@lucide/svelte/icons/sparkles";
+	import ThemeSwitcher from "./theme-switcher.svelte";
 	import type { ComponentProps } from "svelte";
 	import { cn } from "$lib/utils.js";
 
@@ -130,15 +128,6 @@
 						? `Current project: ${currentProject.name}`
 						: "Keep Overview calm, then move into chat, library, studio, or workflows when needed."}
 				</p>
-				<Button
-					variant="secondary"
-					size="sm"
-					class={sidebarActionButtonClass}
-					href="/app/chat"
-				>
-					<SparklesIcon class="size-3.5" />
-					Open chat
-				</Button>
 			</div>
 		</div>
 	</Sidebar.Header>
@@ -148,6 +137,7 @@
 	</Sidebar.Content>
 
 	<Sidebar.Footer class="px-2 pb-3 pt-2">
+		<ThemeSwitcher />
 		<NavUser {user} />
 	</Sidebar.Footer>
 

@@ -34,7 +34,7 @@
 </script>
 
 <div
-	class="{shell.assistantColumn()} transition-[width] duration-200 ease-in-out"
+	class="{shell.assistantColumn()} transition-[width] duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]"
 	style="width: {isOpen ? `${panelWidth}px` : '0px'}"
 	aria-hidden={!isOpen}
 >
@@ -53,8 +53,8 @@
 		{/if}
 
 		<div
-			class="flex h-full min-h-0 w-full min-w-0 transition-opacity duration-200 {isOpen
-				? 'opacity-100'
+			class="flex h-full min-h-0 w-full min-w-0 transition-opacity duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] {isOpen
+				? 'opacity-100 delay-100'
 				: 'pointer-events-none opacity-0'}"
 		>
 			<AssistantWorkspace

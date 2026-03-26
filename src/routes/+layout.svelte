@@ -1,12 +1,17 @@
 <script lang="ts">
 	import './layout.css';
 	import { auth } from '$lib/auth';
+	import { themeStore } from '$lib/stores/theme.svelte';
 	import { onMount } from 'svelte';
 
 	let { children } = $props();
 
 	onMount(() => {
 		void auth.init();
+	});
+
+	$effect(() => {
+		themeStore.apply();
 	});
 </script>
 

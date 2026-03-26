@@ -2,7 +2,7 @@ import { tv } from "tailwind-variants";
 
 export const shellLayoutVariants = tv({
 	slots: {
-		viewport: "flex h-full flex-1 overflow-hidden bg-[var(--shell-frame-bg)]",
+		viewport: "relative flex h-full flex-1 overflow-hidden bg-[var(--shell-frame-bg)]",
 		mainColumn: "flex min-w-0 flex-1 flex-col overflow-hidden",
 		header:
 			"shrink-0 border-b border-[var(--shell-border-strong)] bg-[var(--surface-shell-header)] backdrop-blur",

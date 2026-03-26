@@ -35,6 +35,8 @@
 	import ThumbsUpIcon from "@lucide/svelte/icons/thumbs-up";
 	import ThumbsDownIcon from "@lucide/svelte/icons/thumbs-down";
 	import RefreshCwIcon from "@lucide/svelte/icons/refresh-cw";
+	import BotIcon from "@lucide/svelte/icons/bot";
+	import CircleUserIcon from "@lucide/svelte/icons/circle-user";
 	import type { Snippet } from "svelte";
 
 	type ChatMessage = {
@@ -222,7 +224,11 @@
 								)}
 							>
 								{#if isAssistant}
-									<div class="group flex w-full flex-col gap-0">
+								<div class="group flex w-full gap-3">
+									<div class="mt-1 flex size-7 shrink-0 items-center justify-center rounded-full bg-primary/10">
+										<BotIcon class="size-4 text-primary" />
+									</div>
+									<div class="min-w-0 flex-1 flex flex-col gap-0">
 										<MessageContent
 											class="text-foreground prose w-full flex-1 rounded-lg bg-transparent p-0"
 											markdown={true}
@@ -288,13 +294,19 @@
 											</MessageAction>
 										</MessageActions>
 									</div>
+								</div>
 								{:else}
 									<div class="group flex w-full flex-col items-end gap-1">
-										<MessageContent
-											class="bg-muted text-primary max-w-[85%] rounded-3xl px-5 py-2.5 sm:max-w-[75%]"
-										>
-											{message.content}
-										</MessageContent>
+										<div class="flex items-start gap-3 max-w-[85%] sm:max-w-[75%]">
+											<MessageContent
+												class="bg-muted text-primary flex-1 rounded-3xl px-5 py-2.5"
+											>
+												{message.content}
+											</MessageContent>
+											<div class="mt-1 flex size-7 shrink-0 items-center justify-center rounded-full bg-muted">
+												<CircleUserIcon class="size-4 text-muted-foreground" />
+											</div>
+										</div>
 										<MessageActions
 											class={cn(
 												"flex gap-0 opacity-0 transition-opacity duration-150 group-hover:opacity-100"
@@ -359,10 +371,15 @@
 						{/each}
 						{#if isLoading}
 							<Message class="mx-auto flex w-full max-w-full flex-col items-start gap-2 px-0">
-								<div class="flex items-center gap-1.5 px-1 py-2">
-									<span class="bg-muted-foreground/40 size-1.5 animate-bounce rounded-full [animation-delay:-0.3s]"></span>
-									<span class="bg-muted-foreground/40 size-1.5 animate-bounce rounded-full [animation-delay:-0.15s]"></span>
-									<span class="bg-muted-foreground/40 size-1.5 animate-bounce rounded-full"></span>
+								<div class="flex items-center gap-3 px-1 py-2">
+									<div class="flex size-7 shrink-0 items-center justify-center rounded-full bg-primary/10">
+										<BotIcon class="size-4 text-primary" />
+									</div>
+									<div class="flex items-center gap-1.5">
+										<span class="bg-muted-foreground/40 size-1.5 animate-bounce rounded-full [animation-delay:-0.3s]"></span>
+										<span class="bg-muted-foreground/40 size-1.5 animate-bounce rounded-full [animation-delay:-0.15s]"></span>
+										<span class="bg-muted-foreground/40 size-1.5 animate-bounce rounded-full"></span>
+									</div>
 								</div>
 							</Message>
 						{/if}

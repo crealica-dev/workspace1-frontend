@@ -5,12 +5,11 @@
 	import AppSidebar from "$lib/components/app-sidebar.svelte";
 	import { auth } from "$lib/auth";
 	import { shellLayoutVariants } from "$lib/design/index.js";
-	import { Button } from "$lib/components/ui/button/index.js";
 	import { Input } from "$lib/components/ui/input/index.js";
 	import * as Sidebar from "$lib/components/ui/sidebar/index.js";
 	import { projectStore } from "$lib/stores/project.svelte";
 	import { agentPanelState } from "$lib/stores/agent-panel.svelte";
-	import { ChevronLeft, ChevronRight, Search, Sparkles } from "@lucide/svelte";
+	import { Bot, Search } from "@lucide/svelte";
 
 	let { data, children } = $props();
 	let clearingExpiredSession = $state(false);
@@ -101,6 +100,32 @@
 	<AppSidebar user={{ name: displayName, email }} />
 	<Sidebar.Inset>
 		<div class={shell.viewport()}>
+			<!-- Chat toggle — anchored to the viewport so it stays in place while the panel resizes -->
+			<div class="absolute top-3 right-3 z-30 sm:top-4 sm:right-4">
+				<button
+					type="button"
+					class="chat-toggle group relative flex h-10 items-center rounded-full border border-border/80 transition-[background-color,box-shadow,padding,border-color] duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 {agentPanelState.isOpen ? 'flex-row-reverse bg-primary pr-2.5 pl-1 text-primary-foreground shadow-md' : 'bg-[var(--surface-elevated)] pl-1 pr-3 hover:border-border hover:shadow-sm'}"
+					onclick={() => agentPanelState.toggle()}
+					aria-label="Toggle agent panel"
+					aria-pressed={agentPanelState.isOpen}
+				>
+					<span
+						class="flex size-8 items-center justify-center rounded-full transition-[background-color,transform] duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] {agentPanelState.isOpen ? 'bg-primary-foreground/20 scale-105' : 'bg-primary/10'}"
+					>
+						<Bot class="size-4 transition-[color,transform] duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] {agentPanelState.isOpen ? 'text-primary-foreground' : 'text-primary'}" />
+					</span>
+					<span class="mx-1 text-sm font-semibold tracking-tight transition-colors duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]">
+						{agentPanelState.isOpen ? "Close" : "Chat"}
+					</span>
+					{#if !agentPanelState.isOpen}
+						<span class="absolute -top-1 -right-1 flex size-3">
+							<span class="absolute inline-flex size-full animate-ping rounded-full bg-primary/40"></span>
+							<span class="relative inline-flex size-3 rounded-full bg-primary"></span>
+						</span>
+					{/if}
+				</button>
+			</div>
+
 			<div class={shell.mainColumn()}>
 				<header class={shell.header()}>
 					<div class={shell.headerInner()}>
@@ -123,26 +148,6 @@
 								placeholder={routeMeta.searchPlaceholder}
 								class={shell.headerSearch()}
 							/>
-						</div>
-
-						<div class="ms-auto flex items-center gap-2">
-							<Button
-								variant={agentPanelState.isOpen ? "secondary" : "outline"}
-								size="sm"
-								class={shell.headerButton()}
-								onclick={() => agentPanelState.toggle()}
-								aria-label="Toggle agent panel"
-							>
-							<span class="flex size-7 items-center justify-center rounded-full border border-[var(--shell-border-soft)] bg-[var(--surface-elevated)]">
-									<Sparkles class="size-3.5" />
-								</span>
-								<span class="hidden sm:inline">Chat</span>
-								{#if agentPanelState.isOpen}
-									<ChevronRight class="size-4 text-muted-foreground" />
-								{:else}
-									<ChevronLeft class="size-4 text-muted-foreground" />
-								{/if}
-							</Button>
 						</div>
 					</div>
 				</header>
