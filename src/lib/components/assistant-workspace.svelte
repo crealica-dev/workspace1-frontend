@@ -6,8 +6,10 @@
 	import * as DropdownMenu from "$lib/components/ui/dropdown-menu/index.js";
 	import { auth } from "$lib/auth";
 	import {
+		iconContainerClass,
 		interactiveItemVariants,
 		metricLabelClass,
+		shellLayoutVariants,
 		surfaceVariants,
 		workspaceStatusTone,
 	} from "$lib/design/index.js";
@@ -57,6 +59,7 @@ const SUGGESTIONS = [
 	}: Props = $props();
 
 	let localMessages = $state<ChatMessage[]>([]);
+	const shell = shellLayoutVariants();
 	let isLoading = $state(false);
 	let reconnecting = $state(false);
 	let chatError = $state<string | null>(null);
@@ -92,7 +95,7 @@ const SUGGESTIONS = [
 						padding: "none",
 						emphasis: "soft",
 					})
-				: "rounded-none border-0 border-l border-[var(--shell-border-strong)] bg-[var(--surface-panel)] shadow-none",
+				: "rounded-none border-0 shadow-none",
 		),
 	);
 	const workflowTrayClass = surfaceVariants({
@@ -106,12 +109,6 @@ const SUGGESTIONS = [
 		radius: "block",
 		padding: "md",
 		emphasis: "flat",
-	});
-	const emptyStateCardClass = surfaceVariants({
-		tone: "elevated",
-		radius: "panel",
-		padding: "md",
-		emphasis: "soft",
 	});
 	const suggestionCardClass = interactiveItemVariants({
 		tone: "card",
@@ -463,7 +460,7 @@ const SUGGESTIONS = [
 				<Sparkles class="size-7 text-primary" />
 			</div>
 			<div class="space-y-2">
-				<h3 class="text-foreground text-lg font-semibold tracking-tight">
+			<h3 class="text-foreground text-balance text-lg font-semibold tracking-tight">
 					Start in the main Acheulit workspace
 				</h3>
 				<p class="text-muted-foreground mx-auto max-w-xl text-sm leading-6">
@@ -518,49 +515,49 @@ const SUGGESTIONS = [
 {/snippet}
 
 {#snippet drawerEmptyState()}
-	<div class="flex h-full flex-col gap-4 px-3 py-3">
-		<div class={cn(emptyStateCardClass, "text-center")}>
-			<div class="mx-auto mb-4 flex size-14 items-center justify-center rounded-3xl border border-white/70 bg-white shadow-sm">
-				<Sparkles class="size-6 text-primary" />
+	<div class="flex h-full flex-col gap-3 px-2 py-3">
+		<div class="space-y-1 px-2 pt-2 text-center">
+			<div class="mx-auto mb-3 flex size-12 items-center justify-center rounded-2xl border border-[var(--shell-border-soft)] bg-[var(--surface-muted)]">
+				<Sparkles class="size-5 text-primary" />
 			</div>
-			<h3 class="text-foreground text-lg font-semibold tracking-tight">
+			<h3 class="text-foreground text-balance text-base font-semibold tracking-tight">
 				Open chat
 			</h3>
-			<p class="text-muted-foreground mx-auto mt-2 max-w-sm text-sm leading-6">
+			<p class="text-muted-foreground mx-auto max-w-xs text-xs leading-5">
 				Use the live thread here while the middle panel keeps project context close.
 			</p>
 		</div>
 
-		<div class="grid gap-3">
+		<div class="grid gap-2">
 			{#each drawerSuggestions as suggestion}
 				<button
 					onclick={() => handleSend(suggestion)}
 					disabled={!canStartChats}
 					class={cn(
-						suggestionCardClass,
-						"group flex items-start gap-3 disabled:cursor-not-allowed disabled:opacity-55",
+						interactiveItemVariants({ tone: "card", density: "compact" }),
+						"group flex items-start gap-2.5 disabled:cursor-not-allowed disabled:opacity-55",
 					)}
 				>
-					<div class="mt-0.5 rounded-full border border-border/70 bg-muted/55 p-2 shadow-sm">
-						<MessageSquare class="text-muted-foreground size-4" />
+					<div class="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-lg border border-[var(--shell-border-soft)] bg-[var(--surface-muted)]">
+						<MessageSquare class="text-muted-foreground size-3.5" />
 					</div>
-					<span class="text-sm font-medium leading-7">{suggestion}</span>
+					<span class="text-sm leading-6">{suggestion}</span>
 				</button>
 			{/each}
 		</div>
 
-		<div class={cn(surfaceVariants({ tone: "ghost", radius: "block", padding: "md", emphasis: "flat" }), "text-xs leading-6 text-muted-foreground")}>
+		<p class="px-2 text-xs leading-5 text-muted-foreground">
 			{composerHelper}
-		</div>
+		</p>
 	</div>
 {/snippet}
 
 <div
 	class={workspaceFrameClass}
 >
-	<div class="shrink-0 border-b border-[var(--shell-border-strong)] bg-background/95 px-5 py-4 backdrop-blur">
-		<div class="flex items-start gap-3">
-			<div class="flex size-10 items-center justify-center rounded-2xl bg-primary/10">
+	<div class={shell.assistantHeader()}>
+		<div class="flex items-start gap-2.5">
+		<div class={iconContainerClass}>
 				<Bot class="size-5 text-primary" />
 			</div>
 			<div class="min-w-0 flex-1">
@@ -568,13 +565,10 @@ const SUGGESTIONS = [
 					<p class="text-sm font-semibold tracking-tight">
 						{isMain ? "Main workspace" : "Acheulit Assistant"}
 					</p>
-					<Badge variant="outline" class={statusMeta.badgeClass}>
-						{statusMeta.label}
-					</Badge>
 					{#if isMain}
 						<Badge
 							variant="outline"
-							class="rounded-full border-border/70 bg-muted/40 text-[10px] uppercase tracking-[0.16em] text-muted-foreground"
+							class="rounded-full border-[var(--shell-border-soft)] bg-[var(--surface-muted)] text-[10px] uppercase tracking-[0.16em] text-muted-foreground"
 						>
 							Chat-first
 						</Badge>
@@ -603,7 +597,7 @@ const SUGGESTIONS = [
 			{/if}
 		</div>
 
-			<div class="mt-4 flex items-center gap-2">
+			<div class="mt-3 flex items-center gap-2">
 				{#if canStartChats}
 					<DropdownMenu.Root>
 						<DropdownMenu.Trigger

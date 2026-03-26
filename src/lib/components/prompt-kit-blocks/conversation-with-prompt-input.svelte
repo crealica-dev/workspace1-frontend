@@ -22,10 +22,12 @@
 	import ArrowUpIcon from "@lucide/svelte/icons/arrow-up";
 	import CameraIcon from "@lucide/svelte/icons/camera";
 	import FolderIcon from "@lucide/svelte/icons/folder";
+	import ImageIcon from "@lucide/svelte/icons/image";
 	import MicIcon from "@lucide/svelte/icons/mic";
 	import MicOffIcon from "@lucide/svelte/icons/mic-off";
 	import PaperclipIcon from "@lucide/svelte/icons/paperclip";
 	import PlayIcon from "@lucide/svelte/icons/play";
+	import AtSignIcon from "@lucide/svelte/icons/at-sign";
 	import XIcon from "@lucide/svelte/icons/x";
 	import { watch } from "runed";
 
@@ -83,9 +85,9 @@
 		variant === "side-panel"
 			? {
 					frame: "bg-[var(--surface-muted)] px-3 pb-0 pt-3",
-					scroll: "rounded-3xl border border-[var(--shell-border-soft)] bg-background px-2 pb-2 pt-2",
+					scroll: "rounded-2xl border border-[var(--shell-border-soft)] bg-background",
 					composer:
-						"border-t border-[var(--shell-border-strong)] px-3 pb-3 pt-3",
+						"bg-[var(--surface-muted)] px-3 pb-3 pt-2",
 					input: "bg-background shadow-sm",
 				}
 			: {
@@ -200,9 +202,9 @@
 <div class="flex h-full w-full flex-col">
 	{#if showMessages}
 		<div class={cn("relative flex-1 overflow-hidden", variantClasses.frame)}>
-			<div bind:this={containerRef} class={cn("h-full overflow-y-auto py-4", variantClasses.scroll)}>
-				<ChatContainerRoot class="relative h-full w-full flex-1 space-y-0 overflow-y-auto px-3">
-					<ChatContainerContent class="min-w-full space-y-6 px-2 py-4">
+			<div bind:this={containerRef} class={cn("h-full overflow-y-auto", variant === "side-panel" ? "py-0" : "py-4", variantClasses.scroll)}>
+				<ChatContainerRoot class={cn("relative h-full w-full flex-1 space-y-0 overflow-y-auto", variant === "side-panel" ? "px-1" : "px-3")}>
+					<ChatContainerContent class={cn("min-w-full space-y-6", variant === "side-panel" ? "px-1 py-2" : "px-2 py-4")}>
 						{#if emptyState && messages.length === 0 && !isLoading}
 							<div class="flex min-h-full items-center justify-center">
 								<div class="w-full">
@@ -373,7 +375,7 @@
 		</div>
 	{/if}
 
-	<div class={cn("bg-background z-10 shrink-0 px-3 pb-3", variantClasses.composer)}>
+	<div class={cn("z-10 shrink-0", variant === "side-panel" ? "" : "bg-background px-3 pb-3", variantClasses.composer)}>
 		<div class="mx-auto max-w-full">
 			<PromptInput
 				{isLoading}
@@ -382,7 +384,8 @@
 				onValueChange={(v) => (prompt = v)}
 				onSubmit={handleSubmit}
 				class={cn(
-					"border-input bg-popover relative z-10 w-full rounded-3xl border p-0 pt-1 shadow-xs",
+					"border-input bg-popover relative z-10 w-full border p-0 pt-1 shadow-xs",
+					variant === "side-panel" ? "rounded-2xl" : "rounded-3xl",
 					variantClasses.input,
 				)}
 			>
@@ -393,47 +396,57 @@
 					/>
 
 					<PromptInputActions
-						class="mt-4 flex w-full items-center justify-between gap-2 px-3 pb-3"
+						class="mt-2 flex w-full items-center justify-between gap-2 px-3 pb-3"
 					>
 						<div class="flex items-center gap-1.5">
 							<div bind:this={attachMenuRef} class="relative">
 								{#if attachMenuOpen}
-									<div class="absolute bottom-11 left-0 z-20 flex flex-col gap-1.5 rounded-full border border-border/70 bg-background/92 p-1.5 shadow-lg backdrop-blur">
+									<div class="absolute bottom-11 left-0 z-20 w-56 rounded-xl border border-[var(--shell-border-soft)] bg-background p-1 shadow-lg">
 										<button
 											type="button"
-											class="flex size-9 items-center justify-center rounded-full border border-border/60 bg-background text-foreground transition hover:bg-muted"
-											title="Browse project library"
+											class="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm text-foreground transition-colors hover:bg-[var(--surface-muted)]"
 											disabled={disabled}
 											onclick={openLibraryImport}
 										>
-											<FolderIcon class="size-[18px]" />
+											<FolderIcon class="size-4 text-muted-foreground" />
+											Browse library
 										</button>
 										<button
 											type="button"
-											class="flex size-9 items-center justify-center rounded-full border border-pink-200 bg-pink-50 text-pink-600 transition hover:bg-pink-100 dark:border-pink-900 dark:bg-pink-950/30 dark:text-pink-300"
-											title="Instagram import"
+											class="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm text-foreground transition-colors hover:bg-[var(--surface-muted)]"
+											disabled={disabled}
+										>
+											<ImageIcon class="size-4 text-muted-foreground" />
+											Upload image
+										</button>
+										<div class="my-1 h-px bg-[var(--shell-border-soft)]"></div>
+										<p class="px-2.5 py-1.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Import from</p>
+										<button
+											type="button"
+											class="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm text-foreground transition-colors hover:bg-[var(--surface-muted)]"
 											disabled={disabled}
 											onclick={() => queueImportPrompt("instagram")}
 										>
-											<CameraIcon class="size-[18px]" />
+											<CameraIcon class="size-4 text-muted-foreground" />
+											Instagram
 										</button>
 										<button
 											type="button"
-											class="flex size-9 items-center justify-center rounded-full border border-rose-200 bg-rose-50 text-rose-600 transition hover:bg-rose-100 dark:border-rose-900 dark:bg-rose-950/30 dark:text-rose-300"
-											title="YouTube import"
+											class="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm text-foreground transition-colors hover:bg-[var(--surface-muted)]"
 											disabled={disabled}
 											onclick={() => queueImportPrompt("youtube")}
 										>
-											<PlayIcon class="size-[18px]" />
+											<PlayIcon class="size-4 text-muted-foreground" />
+											YouTube
 										</button>
 										<button
 											type="button"
-											class="flex size-9 items-center justify-center rounded-full border border-border/70 bg-foreground text-background transition hover:opacity-90 dark:bg-background dark:text-foreground"
-											title="X import"
+											class="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm text-foreground transition-colors hover:bg-[var(--surface-muted)]"
 											disabled={disabled}
 											onclick={() => queueImportPrompt("x")}
 										>
-											<XIcon class="size-[18px]" />
+											<AtSignIcon class="size-4 text-muted-foreground" />
+											X (Twitter)
 										</button>
 									</div>
 								{/if}
@@ -458,20 +471,6 @@
 									</Button>
 								</PromptInputAction>
 							</div>
-
-							<PromptInputAction>
-								{#snippet tooltip()}
-									<p>Camera / image</p>
-								{/snippet}
-								<Button
-									variant="outline"
-									size="icon"
-									class="size-9 rounded-full"
-									disabled={disabled}
-								>
-									<CameraIcon class="h-[18px] w-[18px]" />
-								</Button>
-							</PromptInputAction>
 						</div>
 						<div class="flex items-center gap-1.5">
 							<PromptInputAction>

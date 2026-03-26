@@ -4,7 +4,7 @@ import { surfaceVariants } from "./surfaces.js";
 export const sidebarBrandExpandedClass =
 	"flex flex-col items-center gap-3 px-3 py-2 text-center";
 
-export const sidebarBrandLogoClass = "block h-16 w-auto object-contain";
+export const sidebarBrandLogoClass = "block h-12 w-auto object-contain";
 
 export const sidebarBrandMetaClass = "grid text-center text-sm leading-tight";
 

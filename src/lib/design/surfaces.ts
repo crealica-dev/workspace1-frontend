@@ -1,7 +1,7 @@
 import { tv } from "tailwind-variants";
 
 export const surfaceVariants = tv({
-	base: "text-foreground border border-[var(--shell-border-soft)]",
+	base: "text-foreground ring-0 border border-[var(--shell-border-soft)]",
 	variants: {
 		tone: {
 			hero: "bg-[var(--surface-hero)]",
@@ -12,8 +12,8 @@ export const surfaceVariants = tv({
 			ghost: "border-dashed bg-transparent",
 		},
 		radius: {
-			panel: "rounded-3xl",
-			block: "rounded-2xl",
+			panel: "rounded-[var(--radius-shell-panel)]",
+			block: "rounded-[var(--radius-shell-block)]",
 			pill: "rounded-full",
 			none: "rounded-none",
 		},
@@ -69,3 +69,11 @@ export const metricLabelClass =
 export const supportingCopyClass = "text-sm leading-6 text-muted-foreground";
 
 export const sectionTitleClass = "text-lg font-semibold";
+
+/** Canonical icon container — use inside section headers, cards, and list items. */
+export const iconContainerClass =
+	"flex size-10 items-center justify-center rounded-2xl border border-[var(--shell-border-soft)] bg-[var(--surface-muted)]";
+
+/** Larger icon container — use inside shortcut tiles. */
+export const iconContainerLgClass =
+	"flex size-11 items-center justify-center rounded-2xl border border-[var(--shell-border-soft)] bg-[var(--surface-muted)]";

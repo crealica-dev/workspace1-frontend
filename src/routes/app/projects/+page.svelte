@@ -324,10 +324,10 @@
 		}),
 		"text-center",
 	);
-	const quietBadgeClass = "rounded-full border-border/70 bg-background/80";
+	const quietBadgeClass = "rounded-full border-[var(--shell-border-soft)] bg-[var(--surface-elevated)]";
 	const recentSessionRowClass = cn(
 		interactiveItemVariants({ tone: "card", density: "regular" }),
-		"flex w-full items-center gap-3 shadow-sm",
+		"flex w-full items-center gap-3",
 	);
 
 	const activeFolderLabel = $derived(
@@ -986,7 +986,7 @@
 									selectedAssetId = asset.id;
 								}}
 							>
-								<div class="aspect-[4/3] border-b border-border/60 bg-muted/25 p-3">
+								<div class="aspect-[4/3] border-b border-[var(--shell-border-soft)] bg-[var(--surface-muted)] p-3">
 									{#if assetKind === "image" && assetPreviewUrl}
 										<img
 											src={assetPreviewUrl}
@@ -1002,7 +1002,7 @@
 											preload="metadata"
 										></video>
 									{:else}
-										<div class="flex h-full w-full flex-col items-center justify-center rounded-2xl border border-dashed border-border/70 bg-background/70 text-center">
+										<div class="flex h-full w-full flex-col items-center justify-center rounded-2xl border border-dashed border-[var(--shell-border-soft)] bg-[var(--surface-elevated)] text-center">
 											<AssetIcon class="size-8 text-muted-foreground" />
 											<p class="mt-2 text-xs font-medium text-muted-foreground">
 												{getAssetKindLabel(assetKind)}

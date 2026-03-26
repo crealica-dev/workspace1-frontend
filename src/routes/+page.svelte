@@ -58,7 +58,7 @@
 	<div class="mx-auto grid max-w-screen-xl gap-10 px-4 py-10 sm:px-6 lg:grid-cols-[1fr_420px] lg:gap-14 lg:px-8 lg:py-20">
 		<div class="flex flex-col justify-center">
 			<div class="mb-6 flex items-center gap-4">
-				<div class="flex size-14 items-center justify-center rounded-3xl border border-border/70 bg-white p-2.5 shadow-sm">
+				<div class="flex size-14 items-center justify-center rounded-3xl border border-[var(--shell-border-soft)] bg-[var(--surface-elevated)] p-2.5 shadow-sm">
 					<img
 						src="/brand/acheulit-logo.png"
 						alt="Acheulit logo"

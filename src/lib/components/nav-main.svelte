@@ -15,7 +15,6 @@
 </script>
 
 <Sidebar.Group>
-	<Sidebar.GroupLabel>Workspace</Sidebar.GroupLabel>
 	<Sidebar.Menu>
 		{#each items as item (item.title)}
 			<Sidebar.MenuItem>

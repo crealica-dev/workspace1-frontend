@@ -34,7 +34,7 @@
 </script>
 
 <div
-	class={shell.assistantColumn()}
+	class="{shell.assistantColumn()} transition-[width] duration-200 ease-in-out"
 	style="width: {isOpen ? `${panelWidth}px` : '0px'}"
 	aria-hidden={!isOpen}
 >

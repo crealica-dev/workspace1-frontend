@@ -4,6 +4,7 @@
 	import * as Tabs from "$lib/components/ui/tabs/index.js";
 	import {
 		eyebrowBadgeClass,
+		iconContainerLgClass,
 		interactiveItemVariants,
 		sectionTitleClass,
 		supportingCopyClass,

@@ -3,6 +3,7 @@
 	import { Button } from "$lib/components/ui/button/index.js";
 	import {
 		eyebrowBadgeClass,
+		iconContainerLgClass,
 		interactiveItemVariants,
 		sectionTitleClass,
 		supportingCopyClass,
@@ -117,13 +118,13 @@
 							)}
 					>
 						<div class="flex items-start gap-3">
-							<div class="flex size-11 shrink-0 items-center justify-center rounded-2xl border border-border/70 bg-primary/10">
+							<div class={iconContainerLgClass}>
 								<tpl.icon class="size-5 text-primary" />
 							</div>
 							<div class="min-w-0">
 								<div class="flex items-center gap-2">
 									<p class={sectionTitleClass}>{tpl.title}</p>
-									<span class="rounded-full border border-border/70 bg-[var(--surface-muted)] px-2 py-0.5 text-xs text-muted-foreground">
+									<span class="rounded-full border border-[var(--shell-border-soft)] bg-[var(--surface-muted)] px-2 py-0.5 text-xs text-muted-foreground">
 										{tpl.category}
 									</span>
 								</div>

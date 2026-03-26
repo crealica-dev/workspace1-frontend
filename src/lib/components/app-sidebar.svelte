@@ -59,6 +59,7 @@
 	import NavUser from "./nav-user.svelte";
 	import SparklesIcon from "@lucide/svelte/icons/sparkles";
 	import type { ComponentProps } from "svelte";
+	import { cn } from "$lib/utils.js";
 
 	let {
 		ref = $bindable(null),
@@ -80,7 +81,7 @@
 	<Sidebar.Header class="gap-4 px-2 py-3 group-data-[collapsible=icon]:items-center group-data-[collapsible=icon]:px-0">
 		<a
 			href="/app"
-			class={`${sidebarBrandExpandedClass} group-data-[collapsible=icon]:hidden`}
+			class={cn(sidebarBrandExpandedClass, "group-data-[collapsible=icon]:hidden")}
 		>
 			<img
 				src="/brand/acheulit-logo.png"

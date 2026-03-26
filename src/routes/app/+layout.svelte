@@ -4,17 +4,12 @@
 	import AgentPanel from "$lib/components/agent-panel.svelte";
 	import AppSidebar from "$lib/components/app-sidebar.svelte";
 	import { auth } from "$lib/auth";
-	import { shellLayoutVariants, workspaceStatusTone } from "$lib/design/index.js";
-	import { Badge } from "$lib/components/ui/badge/index.js";
-	import * as Breadcrumb from "$lib/components/ui/breadcrumb/index.js";
+	import { shellLayoutVariants } from "$lib/design/index.js";
 	import { Button } from "$lib/components/ui/button/index.js";
 	import { Input } from "$lib/components/ui/input/index.js";
-	import { Separator } from "$lib/components/ui/separator/index.js";
 	import * as Sidebar from "$lib/components/ui/sidebar/index.js";
 	import { projectStore } from "$lib/stores/project.svelte";
 	import { agentPanelState } from "$lib/stores/agent-panel.svelte";
-	import { workspaceSearchStore } from "$lib/stores/workspace-search.svelte";
-	import { cn } from "$lib/utils.js";
 	import { ChevronLeft, ChevronRight, Search, Sparkles } from "@lucide/svelte";
 
 	let { data, children } = $props();
@@ -51,21 +46,10 @@
 	const email = $derived(data.email ?? "authenticated user");
 	const displayName = $derived(formatDisplayName(email));
 	const currentProject = $derived(projectStore.currentProject);
-	const workspaceStatus = $derived(projectStore.status);
-	const isProjectLibraryRoute = $derived(page.url.pathname === "/app/projects");
 	const routeMeta = $derived(getRouteMeta(page.url.pathname));
 	const headerContext = $derived(
 		currentProject?.name ? `Inside ${currentProject.name}` : projectStore.statusMessage,
 	);
-	const statusMeta = $derived(
-		workspaceStatusTone(workspaceStatus, projectStore.statusMessage),
-	);
-
-	$effect(() => {
-		if (!isProjectLibraryRoute && workspaceSearchStore.query) {
-			workspaceSearchStore.clear();
-		}
-	});
 
 	function formatDisplayName(value: string) {
 		const [rawName] = value.split("@");
@@ -120,21 +104,10 @@
 			<div class={shell.mainColumn()}>
 				<header class={shell.header()}>
 					<div class={shell.headerInner()}>
-						<div class="flex min-w-0 items-center gap-2">
+						<div class="flex min-w-0 items-center gap-3">
 							<Sidebar.Trigger class="-ms-1" />
-							<Separator orientation="vertical" class="me-1 data-[orientation=vertical]:h-4" />
 							<div class="min-w-0">
-								<Breadcrumb.Root>
-									<Breadcrumb.List>
-										<Breadcrumb.Item class="hidden sm:block">
-											<Breadcrumb.Link href="/app">Acheulit</Breadcrumb.Link>
-										</Breadcrumb.Item>
-										<Breadcrumb.Separator class="hidden sm:block" />
-										<Breadcrumb.Item>
-											<Breadcrumb.Page>{routeMeta.title}</Breadcrumb.Page>
-										</Breadcrumb.Item>
-									</Breadcrumb.List>
-								</Breadcrumb.Root>
+								<p class="text-sm font-semibold leading-none tracking-tight">{routeMeta.title}</p>
 								<p class="text-muted-foreground mt-1 hidden truncate text-xs md:block">
 									{headerContext}
 								</p>
@@ -147,22 +120,12 @@
 							/>
 							<Input
 								type="search"
-								bind:value={workspaceSearchStore.query}
 								placeholder={routeMeta.searchPlaceholder}
 								class={shell.headerSearch()}
 							/>
 						</div>
 
 						<div class="ms-auto flex items-center gap-2">
-							<Badge
-								variant="outline"
-								class={cn(
-									"hidden rounded-full px-3 py-1 text-[11px] sm:inline-flex",
-									statusMeta.badgeClass,
-								)}
-							>
-								{statusMeta.label}
-							</Badge>
 							<Button
 								variant={agentPanelState.isOpen ? "secondary" : "outline"}
 								size="sm"
@@ -170,7 +133,7 @@
 								onclick={() => agentPanelState.toggle()}
 								aria-label="Toggle agent panel"
 							>
-								<span class="flex size-7 items-center justify-center rounded-full border border-border/70 bg-background/80 shadow-sm">
+							<span class="flex size-7 items-center justify-center rounded-full border border-[var(--shell-border-soft)] bg-[var(--surface-elevated)]">
 									<Sparkles class="size-3.5" />
 								</span>
 								<span class="hidden sm:inline">Chat</span>
