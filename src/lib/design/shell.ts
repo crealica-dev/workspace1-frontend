@@ -15,11 +15,11 @@ export const shellLayoutVariants = tv({
 		routeFrame:
 			"mx-auto flex h-full min-h-0 w-full max-w-[var(--shell-content-max-width)] flex-col px-4 py-4 sm:px-6 sm:py-5",
 		assistantColumn:
-			"relative flex h-full min-h-0 shrink-0 overflow-hidden border-l border-[var(--shell-border-strong)] bg-[var(--surface-panel)]",
+			"relative flex h-full min-h-0 shrink-0 overflow-hidden border-l border-[var(--shell-border-strong)] bg-[var(--surface-muted)]",
 		assistantBody: "relative flex h-full min-h-0 w-full overflow-hidden",
 		assistantResizeHandle:
 			"absolute inset-y-0 left-0 z-10 w-1.5 cursor-col-resize bg-transparent transition-colors hover:bg-primary/10",
 		assistantHeader:
-			"shrink-0 border-b border-[var(--shell-border-strong)] bg-[var(--surface-shell-header)] px-4 py-3 backdrop-blur",
+			"shrink-0 bg-[var(--surface-muted)] flex items-center h-[var(--shell-header-height)] sm:h-[var(--shell-header-height-sm)] px-4",
 	},
 });

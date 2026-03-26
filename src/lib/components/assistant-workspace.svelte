@@ -1,12 +1,10 @@
 <script lang="ts">
 	import { goto } from "$app/navigation";
 	import ConversationBlock from "$lib/components/prompt-kit-blocks/conversation-with-prompt-input.svelte";
-	import { Badge } from "$lib/components/ui/badge/index.js";
 	import { Button } from "$lib/components/ui/button/index.js";
 	import * as DropdownMenu from "$lib/components/ui/dropdown-menu/index.js";
 	import { auth } from "$lib/auth";
 	import {
-		iconContainerClass,
 		interactiveItemVariants,
 		metricLabelClass,
 		shellLayoutVariants,
@@ -21,7 +19,6 @@
 	import { projectStore, type ChatMessage } from "$lib/stores/project.svelte";
 	import { cn } from "$lib/utils.js";
 	import {
-		Bot,
 		ChevronDown,
 		ExternalLink,
 		MessageSquare,
@@ -32,7 +29,6 @@
 		Sparkles,
 		Trash2,
 		WifiOff,
-		X,
 	} from "@lucide/svelte";
 
 	type Variant = "main" | "drawer";
@@ -556,48 +552,7 @@ const SUGGESTIONS = [
 	class={workspaceFrameClass}
 >
 	<div class={shell.assistantHeader()}>
-		<div class="flex items-start gap-2.5">
-		<div class={iconContainerClass}>
-				<Bot class="size-5 text-primary" />
-			</div>
-			<div class="min-w-0 flex-1">
-				<div class="flex flex-wrap items-center gap-2">
-					<p class="text-sm font-semibold tracking-tight">
-						{isMain ? "Main workspace" : "Acheulit Assistant"}
-					</p>
-					{#if isMain}
-						<Badge
-							variant="outline"
-							class="rounded-full border-[var(--shell-border-soft)] bg-[var(--surface-muted)] text-[10px] uppercase tracking-[0.16em] text-muted-foreground"
-						>
-							Chat-first
-						</Badge>
-					{/if}
-				</div>
-				<p class="text-muted-foreground mt-1 text-xs leading-5">
-					{#if currentProject}
-						{isMain
-							? `Work inside ${currentProject.name} with project context, chat history, and workflow steps in one place.`
-							: `Working inside ${currentProject.name}.`}
-					{:else}
-						{isMain
-							? "Use the main workspace to plan work, prepare prompts, and keep project context aligned."
-							: "Project-aware chat, sessions, and workflow guidance inside Acheulit."}
-					{/if}
-				</p>
-			</div>
-			{#if showCloseButton}
-				<button
-					onclick={() => onClose?.()}
-					class="text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl p-2 transition-colors"
-					aria-label="Close assistant"
-				>
-					<X class="size-4" />
-				</button>
-			{/if}
-		</div>
-
-			<div class="mt-3 flex items-center gap-2">
+		<div class="flex w-full items-center gap-2">
 				{#if canStartChats}
 					<DropdownMenu.Root>
 						<DropdownMenu.Trigger

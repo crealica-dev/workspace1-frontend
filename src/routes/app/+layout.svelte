@@ -9,11 +9,14 @@
 	import * as Sidebar from "$lib/components/ui/sidebar/index.js";
 	import { projectStore } from "$lib/stores/project.svelte";
 	import { agentPanelState } from "$lib/stores/agent-panel.svelte";
+	import { Badge } from "$lib/components/ui/badge/index.js";
+	import { sidebarStatusBadgeClass, workspaceStatusTone } from "$lib/design/index.js";
 	import { Bot, Search } from "@lucide/svelte";
 
 	let { data, children } = $props();
 	let clearingExpiredSession = $state(false);
 	const shell = shellLayoutVariants();
+	let sidebarOpen = $state(true);
 
 	$effect(() => {
 		return auth.session.subscribe((session) => {
@@ -43,6 +46,7 @@
 	});
 
 	const email = $derived(data.email ?? "authenticated user");
+	const statusMeta = $derived(workspaceStatusTone(projectStore.status, projectStore.statusMessage));
 	const displayName = $derived(formatDisplayName(email));
 	const currentProject = $derived(projectStore.currentProject);
 	const routeMeta = $derived(getRouteMeta(page.url.pathname));
@@ -96,15 +100,35 @@
 	}
 </script>
 
-<Sidebar.Provider>
-	<AppSidebar user={{ name: displayName, email }} />
+<Sidebar.Provider bind:open={sidebarOpen}>
+	<AppSidebar collapsible="offcanvas" user={{ name: displayName, email }} />
 	<Sidebar.Inset>
 		<div class={shell.viewport()}>
-			<!-- Chat toggle — anchored to the viewport so it stays in place while the panel resizes -->
+			<!-- Sidebar toggle — top-left, always visible -->
+			<div class="fixed top-3 left-3 z-50 sm:top-4 sm:left-4">
+				<button
+					type="button"
+					class="panel-toggle group relative flex h-10 items-center rounded-full border border-border/80 transition-[background-color,box-shadow,padding,border-color] duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 {sidebarOpen ? 'flex-row-reverse bg-primary pr-2.5 pl-1 text-primary-foreground shadow-md' : 'bg-[var(--surface-elevated)] pl-1 pr-3 hover:border-border hover:shadow-sm'}"
+					onclick={() => (sidebarOpen = !sidebarOpen)}
+					aria-label="Toggle sidebar"
+					aria-pressed={sidebarOpen}
+				>
+					<span
+						class="flex size-8 items-center justify-center rounded-full transition-[background-color,transform] duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] {sidebarOpen ? 'bg-primary-foreground/20 scale-105' : 'bg-primary/10'}"
+					>
+						<img src="/brand/acheulit-logo.png" alt="" class="size-5 rounded-full object-contain" />
+					</span>
+					<span class="mx-1 text-sm font-semibold tracking-tight transition-colors duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]">
+						{sidebarOpen ? 'Close' : 'Menu'}
+					</span>
+				</button>
+			</div>
+
+			<!-- Chat toggle — top-right -->
 			<div class="absolute top-3 right-3 z-30 sm:top-4 sm:right-4">
 				<button
 					type="button"
-					class="chat-toggle group relative flex h-10 items-center rounded-full border border-border/80 transition-[background-color,box-shadow,padding,border-color] duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 {agentPanelState.isOpen ? 'flex-row-reverse bg-primary pr-2.5 pl-1 text-primary-foreground shadow-md' : 'bg-[var(--surface-elevated)] pl-1 pr-3 hover:border-border hover:shadow-sm'}"
+					class="panel-toggle group relative flex h-10 items-center rounded-full border border-border/80 transition-[background-color,box-shadow,padding,border-color] duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 {agentPanelState.isOpen ? 'flex-row-reverse bg-primary pr-2.5 pl-1 text-primary-foreground shadow-md' : 'bg-[var(--surface-elevated)] pl-1 pr-3 hover:border-border hover:shadow-sm'}"
 					onclick={() => agentPanelState.toggle()}
 					aria-label="Toggle agent panel"
 					aria-pressed={agentPanelState.isOpen}
@@ -130,7 +154,6 @@
 				<header class={shell.header()}>
 					<div class={shell.headerInner()}>
 						<div class="flex min-w-0 items-center gap-3">
-							<Sidebar.Trigger class="-ms-1" />
 							<div class="min-w-0">
 								<p class="text-sm font-semibold leading-none tracking-tight">{routeMeta.title}</p>
 								<p class="text-muted-foreground mt-1 hidden truncate text-xs md:block">
@@ -149,6 +172,18 @@
 								class={shell.headerSearch()}
 							/>
 						</div>
+
+						{#if currentProject}
+							<div class="hidden shrink-0 items-center gap-2 md:flex">
+								<Badge
+									variant="outline"
+									class="{sidebarStatusBadgeClass} {statusMeta.badgeClass}"
+								>
+									{statusMeta.label}
+								</Badge>
+								<span class="text-foreground/80 max-w-[140px] truncate text-xs font-medium">{currentProject.name}</span>
+							</div>
+						{/if}
 					</div>
 				</header>
 
