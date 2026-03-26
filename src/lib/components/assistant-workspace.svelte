@@ -61,6 +61,7 @@ const SUGGESTIONS = [
 	let chatError = $state<string | null>(null);
 	let workflowMode = $state<WorkflowMode>("guided");
 	let activeStep = $state<WorkflowStep>("plan");
+	let outputExpanded = $state(false);
 
 	const isMain = $derived(variant === "main");
 	const currentProject = $derived(projectStore.currentProject);
@@ -81,6 +82,12 @@ const SUGGESTIONS = [
 	);
 	const queuedDraft = $derived(assistantIntentState.draft);
 	const drawerSuggestions = $derived(SUGGESTIONS.slice(0, 3));
+	const lastAssistantMessage = $derived(
+		[...localMessages].reverse().find((m) => m.role === "assistant") ?? null,
+	);
+	const hasAssistantMessages = $derived(
+		localMessages.some((m) => m.role === "assistant"),
+	);
 	const workspaceFrameClass = $derived(
 		cn(
 			"flex h-full min-h-0 flex-col overflow-hidden",
@@ -394,7 +401,25 @@ const SUGGESTIONS = [
 						Manual mode
 					</button>
 				</div>
+				<div class="relative mt-1 h-4">
+					<p
+						class="absolute text-[11px] text-muted-foreground leading-4 transition-all duration-200"
+						class:opacity-0={workflowMode !== "guided"}
+					>
+						Assistant stages each step and prompts before continuing.
+					</p>
+					<p
+						class="absolute text-[11px] text-muted-foreground leading-4 transition-all duration-200"
+						class:opacity-0={workflowMode !== "manual"}
+					>
+						You control the sequence; the assistant helps when asked.
+					</p>
+				</div>
 			</div>
+
+			<p class="text-[11px] text-muted-foreground">
+				Need help? <a href="/app/help" class="font-medium text-primary hover:underline">View tutorials →</a>
+			</p>
 
 				<div class="grid gap-2 md:grid-cols-2 xl:grid-cols-4">
 					{#each workflowSteps as step (step.id)}
@@ -420,18 +445,70 @@ const SUGGESTIONS = [
 				{/each}
 			</div>
 
+			{#if activeStep === "generate" && hasAssistantMessages}
+				<div class="flex flex-wrap items-center gap-2">
+					<p class="mr-1 text-xs text-muted-foreground">Output review:</p>
+					<button
+						type="button"
+						class={cn(
+							interactiveItemVariants({ tone: "pill", density: "compact" }),
+							"border-primary/30 bg-primary/10 text-xs font-medium text-foreground",
+						)}
+						onclick={() =>
+							assistantIntentState.queue(
+								"The output looks good. Continue to the next step.",
+								"workflow:approve",
+							)}
+					>
+						Approve &amp; continue
+					</button>
+					<button
+						type="button"
+						class={cn(
+							interactiveItemVariants({ tone: "pill", density: "compact" }),
+							"text-xs font-medium",
+						)}
+						onclick={() =>
+							assistantIntentState.queue(
+								"The output needs revision. Here is what to change: ",
+								"workflow:revise",
+							)}
+					>
+						Request revision
+					</button>
+				</div>
+			{/if}
+
 			<div class="grid gap-3 lg:grid-cols-[1.15fr_0.85fr]">
 				<div class={supportingBlockClass}>
 					<p class={metricLabelClass}>
-						Preview
+						Latest output
 					</p>
-					<p class="mt-2 text-sm font-medium">
-						{currentProject?.name ?? "No active project yet"}
-					</p>
-					<p class="text-muted-foreground mt-1 text-xs leading-5">
-						{currentProject?.description ??
-							"Once the project context loads, this tray stays attached to the conversation."}
-					</p>
+					{#if lastAssistantMessage}
+						<p
+							class={cn(
+								"mt-2 text-xs leading-5 text-foreground",
+								!outputExpanded && "line-clamp-3",
+							)}
+						>
+							{lastAssistantMessage.content}
+						</p>
+						<button
+							type="button"
+							class="mt-1.5 text-xs font-medium text-primary"
+							onclick={() => (outputExpanded = !outputExpanded)}
+						>
+							{outputExpanded ? "Collapse" : "See full"}
+						</button>
+					{:else}
+						<p class="mt-2 text-sm font-medium">
+							{currentProject?.name ?? "No active project yet"}
+						</p>
+						<p class="text-muted-foreground mt-1 text-xs leading-5">
+							{currentProject?.description ??
+								"Once the project context loads, this tray stays attached to the conversation."}
+						</p>
+					{/if}
 				</div>
 				<div class={supportingBlockClass}>
 					<p class={metricLabelClass}>
@@ -444,6 +521,60 @@ const SUGGESTIONS = [
 						Workflow choices will prefill the composer so you can send them when ready.
 					</p>
 				</div>
+			</div>
+
+			{#if localMessages.length > 2 && activeStep === "refine"}
+				<div class={surfaceVariants({ tone: "accent", radius: "block", padding: "md", emphasis: "flat" })}>
+					<p class={metricLabelClass}>Refine loop</p>
+					<p class="mt-2 text-sm font-medium">Review before you continue</p>
+					<div class="mt-3 flex flex-wrap gap-2">
+						<button
+							type="button"
+							class={cn(
+								interactiveItemVariants({ tone: "pill", density: "compact" }),
+								"text-xs font-medium",
+							)}
+							onclick={() =>
+								assistantIntentState.queue(
+									"Save the current output as a draft and summarize what was accomplished.",
+									"refine:save",
+								)}
+						>
+							Save this draft
+						</button>
+						<button
+							type="button"
+							class={cn(
+								interactiveItemVariants({ tone: "pill", density: "compact" }),
+								"text-xs font-medium",
+							)}
+							onclick={() =>
+								assistantIntentState.queue(
+									"Start the next refinement pass. Focus on improving quality and filling any gaps.",
+									"refine:next",
+								)}
+						>
+							Start next pass
+						</button>
+					</div>
+				</div>
+			{/if}
+
+			<div class="flex items-center justify-end gap-3">
+				<a
+					href="/app/projects"
+					class="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+				>
+					<ExternalLink class="size-3" />
+					Open full library
+				</a>
+				<a
+					href="/app/studio"
+					class="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+				>
+					<ExternalLink class="size-3" />
+					Open Studio
+				</a>
 			</div>
 		</div>
 	</div>
@@ -524,27 +655,24 @@ const SUGGESTIONS = [
 			</p>
 		</div>
 
-		<div class="grid gap-2">
-			{#each drawerSuggestions as suggestion}
-				<button
-					onclick={() => handleSend(suggestion)}
-					disabled={!canStartChats}
-					class={cn(
-						interactiveItemVariants({ tone: "card", density: "compact" }),
-						"group flex items-start gap-2.5 disabled:cursor-not-allowed disabled:opacity-55",
-					)}
-				>
-					<div class="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-lg border border-[var(--shell-border-soft)] bg-[var(--surface-muted)]">
-						<MessageSquare class="text-muted-foreground size-3.5" />
-					</div>
-					<span class="text-sm leading-6">{suggestion}</span>
-				</button>
-			{/each}
-		</div>
-
-		<p class="px-2 text-xs leading-5 text-muted-foreground">
-			{composerHelper}
-		</p>
+		{#if canStartChats}
+			<div class="grid gap-2">
+				{#each drawerSuggestions as suggestion}
+					<button
+						onclick={() => handleSend(suggestion)}
+						class={cn(
+							interactiveItemVariants({ tone: "card", density: "compact" }),
+							"group flex items-start gap-2.5",
+						)}
+					>
+						<div class="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-lg border border-[var(--shell-border-soft)] bg-[var(--surface-muted)]">
+							<MessageSquare class="text-muted-foreground size-3.5" />
+						</div>
+						<span class="text-sm leading-6">{suggestion}</span>
+					</button>
+				{/each}
+			</div>
+		{/if}
 	</div>
 {/snippet}
 

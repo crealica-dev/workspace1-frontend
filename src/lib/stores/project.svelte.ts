@@ -4,6 +4,7 @@ import {
 	listSessions,
 	createSession,
 	deleteSession,
+	createProject as createProjectApi,
 	listSessionEvents,
 	getConnectionStatusFromError,
 	normalizeWorkspaceError,
@@ -164,6 +165,24 @@ class ProjectStore {
 			return session;
 		} catch (error) {
 			this.reportRuntimeError(error, 'A new chat could not be created.');
+			throw error;
+		}
+	}
+
+	async createProject(
+		name: string,
+		accessToken: string,
+		options: { description?: string } = {},
+	): Promise<Project> {
+		try {
+			const project = await createProjectApi(name, accessToken, options);
+			this.currentProject = project;
+			this.sessions = [];
+			this.currentSession = null;
+			this.setReady('Project created successfully.');
+			return project;
+		} catch (error) {
+			this.reportRuntimeError(error, 'The project could not be created.');
 			throw error;
 		}
 	}

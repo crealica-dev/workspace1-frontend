@@ -118,8 +118,8 @@
 				href="/app/chat"
 				onclick={() =>
 					assistantIntentState.queue(
-						"Help me choose the best Studio tool for the current project and explain why.",
-						"studio-surface",
+						"Review the latest generated output in the studio and suggest the best refinement pass.",
+						"handoff:studio",
 					)}
 				class="gap-2 rounded-full px-4"
 			>

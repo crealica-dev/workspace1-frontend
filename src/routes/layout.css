@@ -23,6 +23,12 @@
 	--shell-header-height-sm: 4.5rem;
 	/* Accent hue variable — overridden by [data-accent] */
 	--accent-h: 255;
+	/* ─── Acheulit brand tokens ─────────────────────── */
+	--brand-gradient-start: #6366f1;
+	--brand-gradient-mid:   #8b5cf6;
+	--brand-gradient-end:   #a78bfa;
+	--brand-surface: color-mix(in srgb, var(--primary) 8%, transparent);
+	--brand-glow: 0 0 40px color-mix(in srgb, var(--primary) 20%, transparent);
 }
 
 /* ═══════════════════════════════════════════════════
@@ -272,6 +278,8 @@
 	--shell-frame-bg: oklch(0.128 0.014 250);
 	--shell-border-soft: oklch(0.278 0.010 250);
 	--shell-border-strong: oklch(0.330 0.010 250);
+	--brand-surface: color-mix(in srgb, var(--primary) 14%, transparent);
+	--brand-glow: 0 0 40px color-mix(in srgb, var(--primary) 30%, transparent);
 }
 
 @theme inline {

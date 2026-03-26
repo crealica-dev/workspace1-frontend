@@ -19,6 +19,7 @@
 		supportingCopyClass,
 		surfaceVariants,
 	} from "$lib/design/index.js";
+	import ProjectCreateModal from "$lib/components/project-create-modal.svelte";
 	import { assistantIntentState } from "$lib/stores/assistant-intent.svelte";
 	import { agentPanelState } from "$lib/stores/agent-panel.svelte";
 	import { projectStore } from "$lib/stores/project.svelte";
@@ -62,6 +63,7 @@
 	const ROOT_FOLDER_KEY = "__root__";
 
 	let accessToken = $state("");
+	let createModalOpen = $state(false);
 	let assets = $state<ProjectAsset[]>([]);
 	let assetVersions = $state<AssetVersion[]>([]);
 	let selectedAssetId = $state<string | null>(null);
@@ -702,11 +704,19 @@
 						<Button
 							variant="outline"
 							class="gap-2 rounded-full px-4"
+							onclick={() => (createModalOpen = true)}
+						>
+							<FolderPlus class="size-4" />
+							New project
+						</Button>
+						<Button
+							variant="outline"
+							class="gap-2 rounded-full px-4"
 							href="/app/chat"
 							onclick={() =>
 								assistantIntentState.queue(
-									"Review the current library, summarize the strongest inputs, and tell me what is still missing.",
-									"library-surface",
+									"Review my current project library and tell me what source material is missing.",
+									"handoff:library",
 								)}
 						>
 							<Sparkles class="size-4" />
@@ -731,7 +741,7 @@
 						</p>
 						<p class="mt-3 text-3xl font-semibold tracking-tight">{totalFolderCount}</p>
 						<p class="mt-1 text-sm leading-6 text-muted-foreground">
-							Folder paths mirror the backend library structure for cleaner retrieval.
+							Keep related files together by organizing them into named folders.
 						</p>
 					</div>
 					<div class={metricSurfaceClass}>
@@ -740,7 +750,7 @@
 						</p>
 						<p class="mt-3 text-3xl font-semibold tracking-tight">{previewableCount}</p>
 						<p class="mt-1 text-sm leading-6 text-muted-foreground">
-							Images, videos, and audio files now get signed preview links from the API.
+							Assets with inline previews — images, audio, and video — are ready to review.
 						</p>
 					</div>
 				</div>
@@ -749,35 +759,23 @@
 
 		<Card.Root class={noteSurfaceClass}>
 			<Card.Header>
-				<Card.Title>Library notes</Card.Title>
+				<Card.Title>Library status</Card.Title>
 				<Card.Description>
-					Aligned with the current FastAPI asset model and storage path policy.
+					Your active upload folder, current search filter, and project context.
 				</Card.Description>
 			</Card.Header>
 			<Card.Content class="space-y-3">
 				<div class={mutedBlockClass}>
 					<p class={metricLabelClass}>
-						Storage path
-					</p>
-					<p class="mt-2 text-sm font-medium leading-6">
-						<code>users/&#123;user_id&#125;/projects/&#123;project_id&#125;/library/...</code>
-					</p>
-					<p class="mt-1 text-sm leading-6 text-muted-foreground">
-						Folder paths entered here now flow into backend storage instead of staying flat.
-					</p>
-				</div>
-
-				<div class={mutedBlockClass}>
-					<p class={metricLabelClass}>
-						Header search
+						Active search
 					</p>
 					<p class="mt-2 text-sm font-medium leading-6">
 						{workspaceSearchStore.query
-							? `Filtering by “${workspaceSearchStore.query}”`
-							: "Ready to filter assets from the top search bar"}
+							? `"${workspaceSearchStore.query}"`
+							: "No filter active"}
 					</p>
 					<p class="mt-1 text-sm leading-6 text-muted-foreground">
-						Search checks display names, folder names, MIME type, and import source in one pass.
+						Matches asset names, folder paths, file types, and sources.
 					</p>
 				</div>
 
@@ -786,10 +784,10 @@
 						Upload target
 					</p>
 					<p class="mt-2 text-sm font-medium leading-6">
-						{uploadTargetFolder ?? "library root"}
+						{uploadTargetFolder ?? "Library root"}
 					</p>
 					<p class="mt-1 text-sm leading-6 text-muted-foreground">
-						New uploads follow the typed folder path, or the folder currently selected in the rail.
+						New uploads land here. Select a folder in the panel or type a path above.
 					</p>
 				</div>
 			</Card.Content>
@@ -1240,4 +1238,12 @@
 	</section>
 </div>
 	</div>
+	<ProjectCreateModal
+		open={createModalOpen}
+		onClose={() => (createModalOpen = false)}
+		onCreated={async (projectId) => {
+			createModalOpen = false;
+			await goto("/app/chat");
+		}}
+	/>
 </div>

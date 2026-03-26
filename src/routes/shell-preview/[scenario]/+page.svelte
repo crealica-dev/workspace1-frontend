@@ -16,6 +16,7 @@
 	import { ChevronRight, Search, Sparkles } from "@lucide/svelte";
 	import OverviewPage from "../../app/+page.svelte";
 	import ChatPage from "../../app/chat/+page.svelte";
+	import HelpPage from "../../app/help/+page.svelte";
 	import LibraryPage from "../../app/projects/+page.svelte";
 	import StudioPage from "../../app/studio/+page.svelte";
 	import WorkflowsPage from "../../app/workflows/+page.svelte";
@@ -125,6 +126,16 @@
 					title: "Workflows",
 					searchPlaceholder: "Search workflows, sessions, and project tools",
 				};
+			case "billing":
+				return {
+					title: "Billing",
+					searchPlaceholder: "Search billing, credits, and payment methods",
+				};
+			case "help":
+				return {
+					title: "Help",
+					searchPlaceholder: "Search guides, FAQs, and tutorials",
+				};
 		}
 	}
 </script>
@@ -203,6 +214,8 @@
 								<LibraryPage />
 							{:else if scenario === "studio"}
 								<StudioPage />
+							{:else if scenario === "help"}
+								<HelpPage />
 							{:else}
 								<WorkflowsPage />
 							{/if}

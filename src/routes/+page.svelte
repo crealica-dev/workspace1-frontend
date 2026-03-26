@@ -8,10 +8,11 @@
 	import { Badge } from "$lib/components/ui/badge/index.js";
 	import {
 		interactiveItemVariants,
+		metricLabelClass,
 		supportingCopyClass,
 		surfaceVariants,
 	} from "$lib/design/index.js";
-	import { CircleAlert, Loader2 } from "@lucide/svelte";
+	import { CircleAlert, Layers, Loader2, MessageSquare, Zap } from "@lucide/svelte";
 
 	import { auth } from "$lib/auth";
 	import { apiBaseUrl, hasSupabaseConfig, supabaseConfigError } from "$lib/config";
@@ -39,6 +40,12 @@
 		"flex h-full flex-col",
 	);
 	const authCardClass = surfaceVariants({
+		tone: "panel",
+		radius: "panel",
+		padding: "none",
+		emphasis: "soft",
+	});
+	const proofCardClass = surfaceVariants({
 		tone: "panel",
 		radius: "panel",
 		padding: "none",
@@ -262,4 +269,77 @@
 			</Card.Root>
 		</div>
 	</div>
+
+	<!-- Proof section -->
+	<section class="py-16 px-4">
+		<div class="max-w-5xl mx-auto">
+			<p class={metricLabelClass}>Built for real workflows</p>
+			<h2 class="mt-2 text-2xl font-bold tracking-tight sm:text-3xl">
+				Everything in one place — the way it actually works
+			</h2>
+			<div class="mt-10 grid gap-6 sm:grid-cols-3">
+				<div class={proofCardClass}>
+					<div class="aspect-video w-full rounded-t-2xl bg-gradient-to-br from-[var(--brand-surface)] to-[var(--surface-muted)] flex items-center justify-center">
+						<MessageSquare size={40} class="text-primary/40" />
+					</div>
+					<div class="px-4 py-3">
+						<p class="text-sm font-semibold">Chat workspace</p>
+						<p class={supportingCopyClass}>Plan, generate, and refine without leaving the thread.</p>
+					</div>
+				</div>
+				<div class={proofCardClass}>
+					<div class="aspect-video w-full rounded-t-2xl bg-gradient-to-br from-[var(--brand-surface)] to-[var(--surface-muted)] flex items-center justify-center">
+						<Layers size={40} class="text-primary/40" />
+					</div>
+					<div class="px-4 py-3">
+						<p class="text-sm font-semibold">Project library</p>
+						<p class={supportingCopyClass}>Source files, context, and outputs connected in one place.</p>
+					</div>
+				</div>
+				<div class={proofCardClass}>
+					<div class="aspect-video w-full rounded-t-2xl bg-gradient-to-br from-[var(--brand-surface)] to-[var(--surface-muted)] flex items-center justify-center">
+						<Zap size={40} class="text-primary/40" />
+					</div>
+					<div class="px-4 py-3">
+						<p class="text-sm font-semibold">Workflow flows</p>
+						<p class={supportingCopyClass}>Automation steps that know your project context.</p>
+					</div>
+				</div>
+			</div>
+			<p class="text-center text-sm text-muted-foreground mt-8">Designed for small businesses, freelancers, and digital marketers.</p>
+		</div>
+	</section>
+
+	<!-- How it works section -->
+	<section class="py-16 px-4 bg-[var(--surface-muted)]">
+		<div class="max-w-4xl mx-auto">
+			<p class={metricLabelClass}>Get started in minutes</p>
+			<h2 class="mt-2 text-2xl font-bold tracking-tight sm:text-3xl">
+				Three steps to your first output
+			</h2>
+			<div class="mt-10 grid gap-6 sm:grid-cols-3">
+				<div class={surfaceVariants({ tone: "muted", radius: "block", padding: "md", emphasis: "flat" })}>
+					<p class="text-3xl font-bold text-muted-foreground/30">01</p>
+					<p class="mt-3 text-sm font-semibold">Create a project</p>
+					<p class="mt-1 text-sm text-muted-foreground leading-relaxed">
+						Drop your source files, references, or a quick brief into a new project.
+					</p>
+				</div>
+				<div class={surfaceVariants({ tone: "muted", radius: "block", padding: "md", emphasis: "flat" })}>
+					<p class="text-3xl font-bold text-muted-foreground/30">02</p>
+					<p class="mt-3 text-sm font-semibold">Chat with Acheulit</p>
+					<p class="mt-1 text-sm text-muted-foreground leading-relaxed">
+						Ask the assistant to plan, transcribe, generate, or summarise — all in one thread.
+					</p>
+				</div>
+				<div class={surfaceVariants({ tone: "muted", radius: "block", padding: "md", emphasis: "flat" })}>
+					<p class="text-3xl font-bold text-muted-foreground/30">03</p>
+					<p class="mt-3 text-sm font-semibold">Review and refine</p>
+					<p class="mt-1 text-sm text-muted-foreground leading-relaxed">
+						Get a draft, request changes, approve, and export — without leaving the workspace.
+					</p>
+				</div>
+			</div>
+		</div>
+	</section>
 </div>

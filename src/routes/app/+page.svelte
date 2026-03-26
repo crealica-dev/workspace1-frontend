@@ -351,7 +351,26 @@
 						<p class="mt-1 line-clamp-2 text-xs text-muted-foreground">{currentProject.description}</p>
 					{/if}
 				</div>
+			{:else}
+				<div class="mt-auto rounded-xl border border-[var(--shell-border-soft)] bg-[var(--surface-muted)] px-4 py-3">
+					<p class="text-xs font-medium text-muted-foreground">Getting started</p>
+					<div class="mt-3 flex flex-col gap-2.5">
+						<div class="flex items-start gap-2.5">
+							<span class="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[10px] font-bold text-primary">1</span>
+							<p class="text-xs text-muted-foreground">Create your first project</p>
+						</div>
+						<div class="flex items-start gap-2.5">
+							<span class="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[10px] font-bold text-primary">2</span>
+							<p class="text-xs text-muted-foreground">Upload a source file or paste a reference link</p>
+						</div>
+						<div class="flex items-start gap-2.5">
+							<span class="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[10px] font-bold text-primary">3</span>
+							<p class="text-xs text-muted-foreground">Ask the assistant to generate a first draft</p>
+						</div>
+					</div>
+				</div>
 			{/if}
 		</div>
 	</section>
+
 </div>

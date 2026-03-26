@@ -10,6 +10,7 @@ export const surfaceVariants = tv({
 			muted: "bg-[var(--surface-muted)]",
 			accent: "bg-[var(--surface-accent)]",
 			ghost: "border-dashed bg-transparent",
+			brand: "border border-[var(--brand-gradient-start)]/20 bg-[var(--brand-surface)] text-foreground",
 		},
 		radius: {
 			panel: "rounded-[var(--radius-shell-panel)]",

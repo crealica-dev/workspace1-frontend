@@ -298,6 +298,25 @@ export async function getOrCreateDefaultProject(token: string): Promise<Project>
 	return createRes.json();
 }
 
+export async function createProject(
+	name: string,
+	token: string,
+	options: { description?: string } = {},
+): Promise<Project> {
+	const slug = name
+		.trim()
+		.toLowerCase()
+		.replace(/[^a-z0-9]+/g, '-')
+		.replace(/^-+|-+$/g, '') || 'new-project';
+	const body: Record<string, string> = { name: name.trim(), slug };
+	if (options.description) body.description = options.description;
+	const res = await fetchWithAuth('/projects', token, {
+		method: 'POST',
+		body: JSON.stringify(body),
+	});
+	return res.json();
+}
+
 export async function listSessions(projectId: string, token: string): Promise<ChatSession[]> {
 	const res = await fetchWithAuth(`/projects/${projectId}/sessions`, token);
 	return res.json();

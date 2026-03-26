@@ -91,8 +91,8 @@
 				href="/app/chat"
 				onclick={() =>
 					assistantIntentState.queue(
-						"Help me choose the best workflow recipe for this project and explain the next step.",
-						"workflow-surface",
+						"Review current workflow configurations and suggest the best next automation step.",
+						"handoff:workflows",
 					)}
 			>
 				<Plus class="size-4" />
