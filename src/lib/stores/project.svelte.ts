@@ -1,10 +1,13 @@
 import {
 	checkBackendHealth,
 	getOrCreateDefaultProject,
+	listProjects,
 	listSessions,
 	createSession,
 	deleteSession,
 	createProject as createProjectApi,
+	updateProject as updateProjectApi,
+	deleteProject as deleteProjectApi,
 	listSessionEvents,
 	getConnectionStatusFromError,
 	normalizeWorkspaceError,
@@ -22,6 +25,7 @@ export type ChatMessage = {
 };
 
 class ProjectStore {
+	projects = $state<Project[]>([]);
 	currentProject = $state<Project | null>(null);
 	sessions = $state<ChatSession[]>([]);
 	currentSession = $state<ChatSession | null>(null);
@@ -33,6 +37,7 @@ class ProjectStore {
 	private initInProgress = false;
 
 	reset(): void {
+		this.projects = [];
 		this.currentProject = null;
 		this.sessions = [];
 		this.currentSession = null;
@@ -101,9 +106,17 @@ class ProjectStore {
 		try {
 			await checkBackendHealth();
 			this.statusMessage = 'Syncing Acheulit...';
-			const project = await getOrCreateDefaultProject(accessToken);
+			const allProjects = await listProjects(accessToken);
+			let project: Project;
+			if (allProjects.length > 0) {
+				project = allProjects[0];
+			} else {
+				project = await getOrCreateDefaultProject(accessToken);
+				allProjects.push(project);
+			}
 			const sessionList = await listSessions(project.id, accessToken);
 
+			this.projects = allProjects;
 			this.currentProject = project;
 			this.sessions = sessionList;
 			this.syncCurrentSession(sessionList);
@@ -176,6 +189,7 @@ class ProjectStore {
 	): Promise<Project> {
 		try {
 			const project = await createProjectApi(name, accessToken, options);
+			this.projects = [project, ...this.projects];
 			this.currentProject = project;
 			this.sessions = [];
 			this.currentSession = null;
@@ -183,6 +197,63 @@ class ProjectStore {
 			return project;
 		} catch (error) {
 			this.reportRuntimeError(error, 'The project could not be created.');
+			throw error;
+		}
+	}
+
+	async switchProject(projectId: string, accessToken: string): Promise<void> {
+		const project = this.projects.find((p) => p.id === projectId);
+		if (!project) return;
+		try {
+			const sessionList = await listSessions(project.id, accessToken);
+			this.currentProject = project;
+			this.sessions = sessionList;
+			this.syncCurrentSession(sessionList);
+			this.setReady('Acheulit is connected and ready.');
+		} catch (error) {
+			this.reportRuntimeError(error, 'Could not switch project.');
+			throw error;
+		}
+	}
+
+	async renameProject(
+		projectId: string,
+		name: string,
+		accessToken: string,
+	): Promise<Project> {
+		try {
+			const updated = await updateProjectApi(projectId, accessToken, { name });
+			this.projects = this.projects.map((p) => (p.id === projectId ? updated : p));
+			if (this.currentProject?.id === projectId) this.currentProject = updated;
+			this.setReady('Project renamed.');
+			return updated;
+		} catch (error) {
+			this.reportRuntimeError(error, 'The project could not be renamed.');
+			throw error;
+		}
+	}
+
+	async deleteProject(projectId: string, accessToken: string): Promise<void> {
+		try {
+			await deleteProjectApi(projectId, accessToken);
+			const nextProjects = this.projects.filter((p) => p.id !== projectId);
+			this.projects = nextProjects;
+			if (this.currentProject?.id === projectId) {
+				const next = nextProjects[0] ?? null;
+				if (next) {
+					const sessionList = await listSessions(next.id, accessToken);
+					this.currentProject = next;
+					this.sessions = sessionList;
+					this.syncCurrentSession(sessionList);
+				} else {
+					this.currentProject = null;
+					this.sessions = [];
+					this.currentSession = null;
+				}
+			}
+			this.setReady('Project deleted.');
+		} catch (error) {
+			this.reportRuntimeError(error, 'The project could not be deleted.');
 			throw error;
 		}
 	}

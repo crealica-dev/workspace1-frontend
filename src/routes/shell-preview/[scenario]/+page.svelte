@@ -17,7 +17,7 @@
 	import OverviewPage from "../../app/+page.svelte";
 	import ChatPage from "../../app/chat/+page.svelte";
 	import HelpPage from "../../app/help/+page.svelte";
-	import LibraryPage from "../../app/projects/+page.svelte";
+	import LibraryPage from "../../app/library/+page.svelte";
 	import StudioPage from "../../app/studio/+page.svelte";
 	import WorkflowsPage from "../../app/workflows/+page.svelte";
 

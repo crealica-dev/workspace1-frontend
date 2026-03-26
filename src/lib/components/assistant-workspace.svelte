@@ -562,7 +562,7 @@ const SUGGESTIONS = [
 
 			<div class="flex items-center justify-end gap-3">
 				<a
-					href="/app/projects"
+					href="/app/library"
 					class="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
 				>
 					<ExternalLink class="size-3" />
@@ -631,7 +631,7 @@ const SUGGESTIONS = [
 				<p class="mt-2 text-sm font-medium">Library, Studio, and Flows stay connected.</p>
 				<button
 					class="mt-3 inline-flex items-center gap-2 text-xs font-medium text-primary"
-					onclick={() => goto("/app/projects")}
+					onclick={() => goto("/app/library")}
 				>
 					Open the library
 					<ExternalLink class="size-3.5" />

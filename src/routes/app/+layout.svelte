@@ -80,10 +80,15 @@
 					title: "Chat",
 					searchPlaceholder: "Search chats, assets, outputs, and tools",
 				};
-			case "/app/projects":
+			case "/app/library":
 				return {
 					title: "Library",
 					searchPlaceholder: "Search library, folders, assets, and outputs",
+				};
+			case "/app/projects":
+				return {
+					title: "Projects",
+					searchPlaceholder: "Search your projects",
 				};
 			case "/app/studio":
 				return {

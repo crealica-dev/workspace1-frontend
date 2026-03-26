@@ -95,7 +95,7 @@
 		},
 		{
 			title: "Library",
-			href: "/app/projects",
+			href: "/app/library",
 			icon: FolderKanban,
 			subtitle: "Manage assets and files",
 			accent: "bg-chart-2/10 text-chart-2",

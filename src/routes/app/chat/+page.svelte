@@ -164,7 +164,7 @@
 						<Card.Description>Move out of chat only when it helps.</Card.Description>
 					</Card.Header>
 					<Card.Content class="grid gap-2">
-						<Button href="/app/projects" variant="ghost" class="justify-between rounded-2xl">
+						<Button href="/app/library" variant="ghost" class="justify-between rounded-2xl">
 							<span class="inline-flex items-center gap-2">
 								<FolderKanban class="size-4" />
 								Library

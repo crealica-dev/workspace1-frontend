@@ -286,6 +286,27 @@ export async function checkBackendHealth(): Promise<BackendHealth> {
 	return res.json();
 }
 
+export async function listProjects(token: string): Promise<Project[]> {
+	const res = await fetchWithAuth('/projects', token);
+	return res.json();
+}
+
+export async function updateProject(
+	projectId: string,
+	token: string,
+	updates: { name?: string; description?: string; metadata?: Record<string, unknown> },
+): Promise<Project> {
+	const res = await fetchWithAuth(`/projects/${projectId}`, token, {
+		method: 'PATCH',
+		body: JSON.stringify(updates),
+	});
+	return res.json();
+}
+
+export async function deleteProject(projectId: string, token: string): Promise<void> {
+	await fetchWithAuth(`/projects/${projectId}`, token, { method: 'DELETE' });
+}
+
 export async function getOrCreateDefaultProject(token: string): Promise<Project> {
 	const res = await fetchWithAuth('/projects', token);
 	const projects: Project[] = await res.json();

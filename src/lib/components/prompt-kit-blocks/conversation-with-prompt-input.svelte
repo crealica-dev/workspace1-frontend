@@ -180,12 +180,12 @@
 	async function openLibraryImport() {
 		attachMenuOpen = false;
 
-		if (typeof window !== "undefined" && window.location.pathname === "/app/projects") {
+		if (typeof window !== "undefined" && window.location.pathname === "/app/library") {
 			window.location.hash = "library";
 			return;
 		}
 
-		await goto("/app/projects#library");
+		await goto("/app/library#library");
 	}
 
 	function queueImportPrompt(source: string) {

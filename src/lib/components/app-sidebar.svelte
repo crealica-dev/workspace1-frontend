@@ -1,6 +1,7 @@
 <script lang="ts" module>
 	import ClapperboardIcon from "@lucide/svelte/icons/clapperboard";
 	import CreditCardIcon from "@lucide/svelte/icons/credit-card";
+	import FolderIcon from "@lucide/svelte/icons/folder";
 	import FolderKanbanIcon from "@lucide/svelte/icons/folder-kanban";
 	import HelpCircleIcon from "@lucide/svelte/icons/help-circle";
 	import LayoutDashboardIcon from "@lucide/svelte/icons/layout-dashboard";
@@ -20,8 +21,13 @@
 				icon: MessageSquareIcon,
 			},
 			{
-				title: "Library",
+				title: "Projects",
 				url: "/app/projects",
+				icon: FolderIcon,
+			},
+			{
+				title: "Library",
+				url: "/app/library",
 				icon: FolderKanbanIcon,
 			},
 			{
@@ -52,6 +58,7 @@
 	import * as Sidebar from "$lib/components/ui/sidebar/index.js";
 	import NavMain from "./nav-main.svelte";
 	import NavUser from "./nav-user.svelte";
+	import ProjectSwitcher from "./project-switcher.svelte";
 	import ThemeSwitcher from "./theme-switcher.svelte";
 	import type { ComponentProps } from "svelte";
 
@@ -75,6 +82,7 @@
 		</div>
 	</Sidebar.Header>
 	<Sidebar.Content class="px-2 pb-2 pt-2">
+		<ProjectSwitcher />
 		<NavMain items={data.navMain} />
 	</Sidebar.Content>
 
