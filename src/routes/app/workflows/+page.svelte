@@ -1,6 +1,7 @@
 <script lang="ts">
 	import * as Card from "$lib/components/ui/card/index.js";
 	import { Button } from "$lib/components/ui/button/index.js";
+	import { assistantIntentState } from "$lib/stores/assistant-intent.svelte";
 	import { Workflow, Zap, GitBranch, Clock, Plus, ArrowRight } from "@lucide/svelte";
 
 	type WorkflowTemplate = {
@@ -49,20 +50,29 @@
 </script>
 
 <svelte:head>
-	<title>Workflows - Workspace</title>
+	<title>Workflows - Acheulit</title>
 </svelte:head>
 
 <div class="space-y-6">
 	<div class="flex items-start justify-between">
 		<div>
-			<h1 class="text-2xl font-bold tracking-tight">Workflows</h1>
+			<h1 class="text-2xl font-bold tracking-tight">Flows</h1>
 			<p class="text-muted-foreground text-sm">
-				Chain AI services together into repeatable automated pipelines.
+				Use workflow recipes as guided starting points, then continue the real work in the main
+				chat workspace.
 			</p>
 		</div>
-		<Button disabled class="gap-2">
+		<Button
+			class="gap-2"
+			href="/app"
+			onclick={() =>
+				assistantIntentState.queue(
+					"Help me choose the best workflow recipe for this project and explain the next step.",
+					"workflow-surface",
+				)}
+		>
 			<Plus class="size-4" />
-			New Workflow
+			Continue in Chat
 		</Button>
 	</div>
 
@@ -94,8 +104,18 @@
 					<Card.Content class="mt-auto pt-0">
 						<div class="flex items-center justify-between">
 							<span class="text-muted-foreground text-xs">{tpl.steps} steps</span>
-							<Button variant="outline" size="sm" disabled class="gap-1.5">
-								Use Template
+							<Button
+								variant="outline"
+								size="sm"
+								class="gap-1.5"
+								href="/app"
+								onclick={() =>
+									assistantIntentState.queue(
+										`Start the ${tpl.title} workflow for my current project and walk me through the first step.`,
+										`workflow:${tpl.id}`,
+									)}
+							>
+								Use in Chat
 								<ArrowRight class="size-3.5" />
 							</Button>
 						</div>
@@ -110,7 +130,8 @@
 			<Workflow class="text-muted-foreground/50 mb-3 size-10" />
 			<p class="text-muted-foreground text-sm font-medium">Custom workflows coming soon</p>
 			<p class="text-muted-foreground/70 mt-1 max-w-xs text-xs">
-				Build and save your own multi-step pipelines with a visual editor.
+				Custom saved flows can come later. For now, start from chat and keep the workflow steps
+				attached to the active thread.
 			</p>
 		</Card.Content>
 	</Card.Root>

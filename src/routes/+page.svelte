@@ -30,30 +30,48 @@
 </script>
 
 <svelte:head>
-	<title>Workspace Studio</title>
+	<title>Acheulit</title>
 	<meta
 		name="description"
-		content="SvelteKit landing page with Supabase authentication for the Workspace multimodal content studio."
+		content="Acheulit is an AI-assisted content and workflow platform for small teams, freelancers, and growing brands."
 	/>
 </svelte:head>
 
 <div class="min-h-screen bg-background">
 	<div class="mx-auto grid max-w-screen-xl gap-10 px-4 py-10 sm:px-6 lg:grid-cols-[1fr_420px] lg:gap-14 lg:px-8 lg:py-20">
 		<div class="flex flex-col justify-center">
+			<div class="mb-6 flex items-center gap-4">
+				<div class="flex size-14 items-center justify-center rounded-[1.6rem] border border-border/70 bg-white p-2.5 shadow-sm">
+					<img
+						src="/brand/acheulit-logo.png"
+						alt="Acheulit logo"
+						class="size-full object-contain"
+					/>
+				</div>
+				<div>
+					<p class="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+						Acheulit
+					</p>
+					<p class="text-sm text-muted-foreground">
+						AI-assisted content and workflow platform
+					</p>
+				</div>
+			</div>
+
 			<div class="mb-6 flex flex-wrap gap-2">
-				<Badge variant="secondary">SvelteKit</Badge>
-					<Badge variant="secondary">FastAPI</Badge>
-					<Badge variant="secondary">Supabase Auth</Badge>
+				<Badge variant="secondary">AI-assisted</Badge>
+				<Badge variant="secondary">Project-aware</Badge>
+				<Badge variant="secondary">Small teams</Badge>
 			</div>
 
 			<h1 class="text-4xl font-bold tracking-tight sm:text-5xl">
-				Project-aware multimodal workflows, sessions, and AI tooling in one studio.
+				One calm place to organize projects, content, and AI-assisted workflows.
 			</h1>
 
 			<p class="text-muted-foreground mt-6 max-w-2xl text-lg leading-8">
-				Use a SvelteKit frontend backed by FastAPI and Supabase to manage projects,
-				sessions, assets, and future agentic chat surfaces without carrying demo-only
-				assumptions into the product UI.
+				Acheulit helps smaller teams, freelancers, and growing brands keep projects,
+				assets, conversations, and guided AI work moving together without juggling
+				disconnected tools.
 			</p>
 
 			<div class="mt-10 grid gap-4 sm:grid-cols-2">
@@ -63,44 +81,44 @@
 					</Card.Header>
 					<Card.Content>
 						<p class="text-muted-foreground text-sm">
-							Keep users, projects, sessions, jobs, and assets aligned with the backend
-							domain model from the first screen.
+							Keep projects, sessions, assets, and working context aligned from the first
+							screen.
 						</p>
 					</Card.Content>
 				</Card.Root>
 
 				<Card.Root>
 					<Card.Header>
-						<Card.Title>Supabase-native auth</Card.Title>
+						<Card.Title>Shared asset library</Card.Title>
 					</Card.Header>
 					<Card.Content>
 						<p class="text-muted-foreground text-sm">
-							Use direct Supabase JS authentication for email and password flows while
-							the FastAPI backend verifies bearer tokens.
+							Store uploads, references, and generated files in one place so every project
+							stays organized.
 						</p>
 					</Card.Content>
 				</Card.Root>
 
 				<Card.Root>
 					<Card.Header>
-						<Card.Title>Frontend-ready API</Card.Title>
+						<Card.Title>Guided assistant</Card.Title>
 					</Card.Header>
 					<Card.Content>
 						<p class="text-muted-foreground text-sm">
-							Configured to talk to <span class="font-medium">{apiBaseUrl}</span> and
-							ready for protected application routes.
+							Open the assistant to review activity, plan next steps, and move from quick
+							asks into deeper workflow work.
 						</p>
 					</Card.Content>
 				</Card.Root>
 
 				<Card.Root>
 					<Card.Header>
-						<Card.Title>AI layer prepared</Card.Title>
+						<Card.Title>Secure access</Card.Title>
 					</Card.Header>
 					<Card.Content>
 						<p class="text-muted-foreground text-sm">
-							shadcn-svelte handles the product UI while the backend is ready for AI
-							surfaces and agentic workflows.
+							Sign in securely and open Acheulit with your projects, conversations, and
+							library ready to go.
 						</p>
 					</Card.Content>
 				</Card.Root>
@@ -110,9 +128,9 @@
 		<div class="flex items-start justify-center lg:justify-end">
 			<Card.Root class="w-full max-w-md">
 				<Card.Header class="space-y-1">
-					<Card.Title class="text-2xl">Sign in to your studio</Card.Title>
+					<Card.Title class="text-2xl">Sign in to Acheulit</Card.Title>
 					<Card.Description>
-						Use Supabase authentication. After sign-in, the app shell is available at
+						Use your account to open projects, conversations, and the workflow library at
 						<span class="font-medium">/app</span>.
 					</Card.Description>
 				</Card.Header>
@@ -139,7 +157,7 @@
 								<p class="font-semibold">{$user?.email ?? "Authenticated user"}</p>
 							</div>
 							<div class="flex gap-3">
-								<Button href="/app" class="flex-1">Open app shell</Button>
+								<Button href="/app" class="flex-1">Open Acheulit</Button>
 								<Button
 									variant="outline"
 									class="flex-1"

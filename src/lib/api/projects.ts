@@ -140,7 +140,7 @@ function createNetworkError(path: string, error: unknown): WorkspaceApiError {
 		path,
 		detail,
 		message: detail,
-		userMessage: 'The app cannot reach the backend right now. Check the API and retry.',
+		userMessage: 'Acheulit cannot reach the backend right now. Check the API and retry.',
 	});
 }
 
@@ -149,7 +149,7 @@ function createInvalidResponseError(path: string): WorkspaceApiError {
 		kind: 'invalid_response',
 		path,
 		message: 'The backend returned an invalid response.',
-		userMessage: 'The backend replied, but the response was incomplete. Please retry.',
+		userMessage: 'Acheulit received an incomplete backend response. Please retry.',
 	});
 }
 
@@ -180,10 +180,10 @@ async function createResponseError(res: Response, path: string): Promise<Workspa
 		: `Request to ${path} failed with ${res.status}`;
 	const userMessage =
 		kind === 'auth'
-			? 'Your sign-in session was rejected by the API. Sign in again and retry.'
+			? 'Your sign-in session was rejected by Acheulit. Sign in again and retry.'
 			: detail
-				? `The workspace API returned ${res.status}: ${detail}`
-				: `The workspace API returned ${res.status}.`;
+				? `The Acheulit API returned ${res.status}: ${detail}`
+				: `The Acheulit API returned ${res.status}.`;
 
 	return new WorkspaceApiError({
 		kind,
@@ -211,14 +211,14 @@ export function normalizeWorkspaceError(error: unknown): WorkspaceApiErrorDetail
 		return {
 			kind: 'http',
 			message: error.message,
-			userMessage: error.message || 'An unexpected workspace error occurred.',
+			userMessage: error.message || 'An unexpected Acheulit error occurred.',
 		};
 	}
 
 	return {
 		kind: 'http',
 		message: 'Unknown workspace error',
-		userMessage: 'An unexpected workspace error occurred.',
+		userMessage: 'An unexpected Acheulit error occurred.',
 	};
 }
 
@@ -293,7 +293,7 @@ export async function getOrCreateDefaultProject(token: string): Promise<Project>
 
 	const createRes = await fetchWithAuth('/projects', token, {
 		method: 'POST',
-		body: JSON.stringify({ name: 'My Workspace', slug: 'my-workspace' }),
+		body: JSON.stringify({ name: 'My First Project', slug: 'my-first-project' }),
 	});
 	return createRes.json();
 }

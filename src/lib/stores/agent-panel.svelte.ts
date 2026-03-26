@@ -1,5 +1,5 @@
 class AgentPanelState {
-	isOpen = $state(false);
+	isOpen = $state(true);
 
 	open() {
 		this.isOpen = true;

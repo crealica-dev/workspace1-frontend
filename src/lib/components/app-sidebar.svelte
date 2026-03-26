@@ -7,12 +7,12 @@
 	const data = {
 		navMain: [
 			{
-				title: "Overview",
+				title: "Chat",
 				url: "/app",
 				icon: LayoutDashboardIcon,
 			},
 			{
-				title: "Projects",
+				title: "Library",
 				url: "/app/projects",
 				icon: FolderKanbanIcon,
 			},
@@ -98,13 +98,17 @@
 			<Sidebar.MenuItem>
 				<Sidebar.MenuButton size="lg" class="rounded-xl px-3 py-2.5">
 					<div
-						class="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-9 items-center justify-center rounded-2xl text-sm font-semibold shadow-sm"
+						class="flex aspect-square size-9 items-center justify-center rounded-2xl border border-sidebar-border/80 bg-white p-1.5 shadow-sm"
 					>
-						W
+						<img
+							src="/brand/acheulit-logo.png"
+							alt="Acheulit logo"
+							class="size-full object-contain"
+						/>
 					</div>
 					<div class="grid flex-1 text-start text-sm leading-tight">
-						<span class="truncate font-semibold">Workspace</span>
-						<span class="truncate text-xs text-sidebar-foreground/65">Studio shell</span>
+						<span class="truncate font-semibold">Acheulit</span>
+						<span class="truncate text-xs text-sidebar-foreground/65">Content workflow platform</span>
 					</div>
 				</Sidebar.MenuButton>
 			</Sidebar.MenuItem>
@@ -113,14 +117,14 @@
 		<div class="group-data-[collapsible=icon]:hidden px-2">
 			<div class="rounded-2xl border border-sidebar-border/70 bg-sidebar-accent/30 p-3">
 				<div class="flex items-start justify-between gap-3">
-					<div class="min-w-0">
+					<!-- <div class="min-w-0">
 						<p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-sidebar-foreground/55">
-							Workspace Agent
+							Acheulit Assistant
 						</p>
 						<p class="mt-1 text-sm font-medium leading-5">
-							Keep chat, projects, and AI workflows moving together.
+							Plan tasks, keep project context organized, and move AI work forward.
 						</p>
-					</div>
+					</div> -->
 					<Badge
 						variant="outline"
 						class="shrink-0 rounded-full px-2 py-0.5 text-[10px] {statusMeta.className}"
@@ -131,16 +135,16 @@
 				<p class="mt-3 text-xs leading-5 text-sidebar-foreground/70">
 					{currentProject
 						? `Current project: ${currentProject.name}`
-						: "Open the agent from anywhere in the shell to start a workspace conversation."}
+						: "Start in chat, then branch into library, studio, or flows without losing context."}
 				</p>
 				<Button
 					variant="secondary"
 					size="sm"
 					class="mt-3 w-full justify-center gap-2 rounded-xl"
-					onclick={() => agentPanelState.open()}
+					href="/app"
 				>
 					<SparklesIcon class="size-3.5" />
-					Open Agent
+					Continue in Chat
 				</Button>
 			</div>
 		</div>

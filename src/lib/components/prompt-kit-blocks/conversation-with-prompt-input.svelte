@@ -33,11 +33,17 @@
 	import ThumbsUpIcon from "@lucide/svelte/icons/thumbs-up";
 	import ThumbsDownIcon from "@lucide/svelte/icons/thumbs-down";
 	import RefreshCwIcon from "@lucide/svelte/icons/refresh-cw";
+	import type { Snippet } from "svelte";
 
 	type ChatMessage = {
 		id: string | number;
 		role: string;
 		content: string;
+	};
+
+	type PromptDraft = {
+		id: string;
+		text: string;
 	};
 
 	type Props = {
@@ -48,6 +54,14 @@
 		disabled?: boolean;
 		disabledMessage?: string;
 		placeholder?: string;
+		queuedDraft?: PromptDraft | null;
+		afterInput?: Snippet;
+		emptyState?: Snippet;
+		conversationFrameClass?: string;
+		scrollRegionClass?: string;
+		composerShellClass?: string;
+		promptInputClass?: string;
+		children?: Snippet;
 	};
 
 	let {
@@ -58,6 +72,14 @@
 		disabled = false,
 		disabledMessage = '',
 		placeholder = 'Message agent...',
+		queuedDraft = null,
+		afterInput,
+		emptyState,
+		conversationFrameClass = '',
+		scrollRegionClass = '',
+		composerShellClass = '',
+		promptInputClass = '',
+		children,
 	}: Props = $props();
 
 	const scrollContext = setScrollContext();
@@ -67,6 +89,7 @@
 	let containerRef = $state<HTMLDivElement | null>(null);
 	let attachMenuOpen = $state(false);
 	let attachMenuRef = $state<HTMLDivElement | null>(null);
+	let lastQueuedDraftId = $state<string | null>(null);
 
 	watch(
 		() => containerRef,
@@ -99,6 +122,14 @@
 			document.removeEventListener("mousedown", handlePointerDown);
 			document.removeEventListener("keydown", handleKeyDown);
 		};
+	});
+
+	$effect(() => {
+		const draft = queuedDraft;
+		if (!draft || draft.id === lastQueuedDraftId) return;
+
+		prompt = prompt.trim() ? `${prompt.trim()}\n${draft.text}` : draft.text;
+		lastQueuedDraftId = draft.id;
 	});
 
 	function handleSubmit() {
@@ -156,10 +187,17 @@
 
 <div class="flex h-full w-full flex-col">
 	{#if showMessages}
-		<div class="relative flex-1 overflow-hidden">
-			<div bind:this={containerRef} class="h-full overflow-y-auto py-4">
+		<div class={cn("relative flex-1 overflow-hidden", conversationFrameClass)}>
+			<div bind:this={containerRef} class={cn("h-full overflow-y-auto py-4", scrollRegionClass)}>
 				<ChatContainerRoot class="relative h-full w-full flex-1 space-y-0 overflow-y-auto px-3">
 					<ChatContainerContent class="min-w-full space-y-6 px-2 py-4">
+						{#if emptyState && messages.length === 0 && !isLoading}
+							<div class="flex min-h-full items-center justify-center">
+								<div class="w-full">
+									{@render emptyState()}
+								</div>
+							</div>
+						{/if}
 						{#each messages as message, index (message.id)}
 							{@const isAssistant = message.role === "assistant"}
 							{@const isLastMessage = index === messages.length - 1}
@@ -323,7 +361,7 @@
 		</div>
 	{/if}
 
-	<div class="bg-background z-10 shrink-0 px-3 pb-3">
+	<div class={cn("bg-background z-10 shrink-0 px-3 pb-3", composerShellClass)}>
 		<div class="mx-auto max-w-full">
 			<PromptInput
 				{isLoading}
@@ -331,7 +369,10 @@
 				value={prompt}
 				onValueChange={(v) => (prompt = v)}
 				onSubmit={handleSubmit}
-				class="border-input bg-popover relative z-10 w-full rounded-3xl border p-0 pt-1 shadow-xs"
+				class={cn(
+					"border-input bg-popover relative z-10 w-full rounded-3xl border p-0 pt-1 shadow-xs",
+					promptInputClass,
+				)}
 			>
 				<div class="flex flex-col">
 					<PromptInputTextarea
@@ -456,6 +497,11 @@
 					</PromptInputActions>
 				</div>
 			</PromptInput>
+			{#if afterInput}
+				<div class="pt-3">
+					{@render afterInput()}
+				</div>
+			{/if}
 			{#if disabled && disabledMessage}
 				<p class="text-muted-foreground px-1 pt-2 text-xs leading-5">
 					{disabledMessage}

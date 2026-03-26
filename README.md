@@ -1,6 +1,6 @@
-# Workspace Frontend
+# Acheulit Frontend
 
-Minimal SvelteKit frontend for the Workspace content studio.
+SvelteKit frontend for Acheulit, an AI-assisted content and workflow platform for smaller teams.
 
 ## Environment
 

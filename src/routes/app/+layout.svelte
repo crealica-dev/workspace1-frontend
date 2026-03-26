@@ -50,11 +50,17 @@
 	const displayName = $derived(formatDisplayName(email));
 	const currentProject = $derived(projectStore.currentProject);
 	const workspaceStatus = $derived(projectStore.status);
+	const isPrimaryWorkspaceRoute = $derived(page.url.pathname === "/app");
 	const isProjectLibraryRoute = $derived(page.url.pathname === "/app/projects");
 	const searchPlaceholder = $derived(
 		isProjectLibraryRoute
-			? "Search library, folders, and assets"
-			: "Search projects, sessions, and tools",
+			? "Search library, folders, assets, and outputs"
+			: isPrimaryWorkspaceRoute
+				? "Search chats, assets, outputs, and tools"
+				: "Search projects, sessions, workflows, and tools",
+	);
+	const assistantToggleLabel = $derived(
+		agentPanelState.isOpen ? "Hide Chat Panel" : "Show Chat Panel",
 	);
 
 	$effect(() => {
@@ -114,69 +120,70 @@
 <Sidebar.Provider>
 	<AppSidebar user={{ name: displayName, email }} />
 	<Sidebar.Inset>
-		<header class="border-b bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-background/75">
-			<div class="mx-auto flex h-16 w-full max-w-7xl items-center gap-3 px-4 sm:h-[4.25rem] sm:px-6">
-				<div class="flex min-w-0 items-center gap-2">
-					<Sidebar.Trigger class="-ms-1" />
-					<Separator orientation="vertical" class="me-1 data-[orientation=vertical]:h-4" />
-					<div class="min-w-0">
-						<Breadcrumb.Root>
-							<Breadcrumb.List>
-								<Breadcrumb.Item class="hidden sm:block">
-									<Breadcrumb.Link href="/app">Workspace</Breadcrumb.Link>
-								</Breadcrumb.Item>
-								<Breadcrumb.Separator class="hidden sm:block" />
-								<Breadcrumb.Item>
-									<Breadcrumb.Page>
-										{currentProject?.name ?? "Authenticated shell"}
-									</Breadcrumb.Page>
-								</Breadcrumb.Item>
-							</Breadcrumb.List>
-						</Breadcrumb.Root>
-						<p class="text-muted-foreground mt-1 hidden truncate text-xs md:block">
-							{projectStore.statusMessage}
-						</p>
+		<div class="flex h-full flex-1 overflow-hidden">
+			<div class="flex min-w-0 flex-1 flex-col overflow-hidden">
+				<header class="shrink-0 border-b bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-background/75">
+					<div class="mx-auto flex h-16 w-full max-w-[1180px] items-center gap-3 px-4 sm:h-[4.25rem] sm:px-6">
+						<div class="flex min-w-0 items-center gap-2">
+							<Sidebar.Trigger class="-ms-1" />
+							<Separator orientation="vertical" class="me-1 data-[orientation=vertical]:h-4" />
+							<div class="min-w-0">
+								<Breadcrumb.Root>
+									<Breadcrumb.List>
+										<Breadcrumb.Item class="hidden sm:block">
+											<Breadcrumb.Link href="/app">Acheulit</Breadcrumb.Link>
+										</Breadcrumb.Item>
+										<Breadcrumb.Separator class="hidden sm:block" />
+										<Breadcrumb.Item>
+											<Breadcrumb.Page>
+												{currentProject?.name ?? "Acheulit home"}
+											</Breadcrumb.Page>
+										</Breadcrumb.Item>
+									</Breadcrumb.List>
+								</Breadcrumb.Root>
+								<p class="text-muted-foreground mt-1 hidden truncate text-xs md:block">
+									{projectStore.statusMessage}
+								</p>
+							</div>
+						</div>
+
+						<div class="relative hidden min-w-[220px] max-w-sm flex-1 md:block">
+							<Search
+								class="text-muted-foreground pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2"
+							/>
+							<Input
+								type="search"
+								bind:value={workspaceSearchStore.query}
+								placeholder={searchPlaceholder}
+								class="h-10 rounded-full border-border/70 bg-muted/40 pl-10 shadow-sm"
+							/>
+						</div>
+
+						<div class="ms-auto flex items-center gap-2">
+							<Badge variant="outline" class="hidden rounded-full px-3 py-1 text-[11px] sm:inline-flex {statusMeta.className}">
+								{statusMeta.label}
+							</Badge>
+							<Button
+								variant={agentPanelState.isOpen ? "secondary" : "outline"}
+								size="sm"
+								class="gap-2 rounded-full px-3.5"
+								onclick={() => agentPanelState.toggle()}
+								aria-label="Toggle agent panel"
+							>
+								<Sparkles class="size-4" />
+								<span class="hidden sm:inline">{assistantToggleLabel}</span>
+							</Button>
+						</div>
+					</div>
+				</header>
+
+				<div class="flex min-h-0 flex-1 flex-col overflow-hidden">
+					<div class="mx-auto flex h-full w-full max-w-[1180px] flex-1 flex-col px-4 pb-10 pt-6 sm:px-6">
+						{@render children()}
 					</div>
 				</div>
-
-				<div class="relative hidden min-w-[220px] max-w-sm flex-1 md:block">
-					<Search
-						class="text-muted-foreground pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2"
-					/>
-					<Input
-						type="search"
-						bind:value={workspaceSearchStore.query}
-						placeholder={searchPlaceholder}
-						class="h-10 rounded-full border-border/70 bg-muted/40 pl-10 shadow-sm"
-					/>
-				</div>
-
-				<div class="ms-auto flex items-center gap-2">
-					<Badge variant="outline" class="hidden rounded-full px-3 py-1 text-[11px] sm:inline-flex {statusMeta.className}">
-						{statusMeta.label}
-					</Badge>
-					<Button
-						variant={agentPanelState.isOpen ? "secondary" : "outline"}
-						size="sm"
-						class="gap-2 rounded-full px-3.5"
-						onclick={() => agentPanelState.toggle()}
-						aria-label="Toggle agent panel"
-					>
-						<Sparkles class="size-4" />
-						<span class="hidden sm:inline">
-							{agentPanelState.isOpen ? "Hide Agent" : "Open Agent"}
-						</span>
-					</Button>
-				</div>
 			</div>
-		</header>
-
-		<div class="flex flex-1 flex-col">
-			<div class="mx-auto flex w-full max-w-7xl flex-1 flex-col px-4 pb-10 pt-6 sm:px-6">
-				{@render children()}
-			</div>
+			<AgentPanel />
 		</div>
 	</Sidebar.Inset>
 </Sidebar.Provider>
-
-<AgentPanel />

@@ -2,6 +2,7 @@
 	import * as Card from "$lib/components/ui/card/index.js";
 	import { Button } from "$lib/components/ui/button/index.js";
 	import * as Tabs from "$lib/components/ui/tabs/index.js";
+	import { assistantIntentState } from "$lib/stores/assistant-intent.svelte";
 	import {
 		Type,
 		Image,
@@ -11,7 +12,6 @@
 		Sparkles,
 		ArrowRight,
 	} from "@lucide/svelte";
-	import { agentPanelState } from "$lib/stores/agent-panel.svelte";
 
 	type ServiceCard = {
 		id: string;
@@ -80,7 +80,7 @@
 </script>
 
 <svelte:head>
-	<title>Studio - Workspace</title>
+	<title>Studio - Acheulit</title>
 </svelte:head>
 
 <div class="space-y-6">
@@ -88,12 +88,21 @@
 		<div>
 			<h1 class="text-2xl font-bold tracking-tight">Studio</h1>
 			<p class="text-muted-foreground text-sm">
-				AI-powered services for text, image, and audio production.
+				Use Studio as the tool shelf for the main workspace, then return to chat to shape the
+				next prompt or refinement step.
 			</p>
 		</div>
-		<Button onclick={() => agentPanelState.open()} class="gap-2">
+		<Button
+			href="/app"
+			onclick={() =>
+				assistantIntentState.queue(
+					"Help me choose the best Studio tool for the current project and explain why.",
+					"studio-surface",
+				)}
+			class="gap-2"
+		>
 			<Sparkles class="size-4" />
-			Ask Agent
+			Continue in Chat
 		</Button>
 	</div>
 
@@ -130,9 +139,14 @@
 								variant="outline"
 								size="sm"
 								class="w-full gap-1.5"
-								onclick={() => agentPanelState.open()}
+								href="/app"
+								onclick={() =>
+									assistantIntentState.queue(
+										`Prepare a ${service.title.toLowerCase()} step for this project and tell me the best prompt or setup to use.`,
+										`studio:${service.id}`,
+									)}
 							>
-								Use via Agent
+								Use in Chat
 								<ArrowRight class="size-3.5" />
 							</Button>
 						</Card.Content>

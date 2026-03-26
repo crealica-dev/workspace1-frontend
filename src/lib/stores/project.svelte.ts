@@ -25,7 +25,7 @@ class ProjectStore {
 	sessions = $state<ChatSession[]>([]);
 	currentSession = $state<ChatSession | null>(null);
 	status = $state<WorkspaceConnectionStatus>('idle');
-	statusMessage = $state('Checking workspace connection...');
+	statusMessage = $state('Checking Acheulit connection...');
 	lastError = $state<WorkspaceApiErrorDetails | null>(null);
 	isInitialized = $state(false);
 
@@ -36,7 +36,7 @@ class ProjectStore {
 		this.sessions = [];
 		this.currentSession = null;
 		this.status = 'idle';
-		this.statusMessage = 'Checking workspace connection...';
+		this.statusMessage = 'Checking Acheulit connection...';
 		this.lastError = null;
 		this.isInitialized = false;
 		this.initInProgress = false;
@@ -46,7 +46,7 @@ class ProjectStore {
 		return this.status === 'ready';
 	}
 
-	private setReady(message = 'Workspace connected and ready.'): void {
+	private setReady(message = 'Acheulit is connected and ready.'): void {
 		this.status = 'ready';
 		this.statusMessage = message;
 		this.lastError = null;
@@ -94,19 +94,19 @@ class ProjectStore {
 		this.initInProgress = true;
 
 		this.status = 'checking';
-		this.statusMessage = 'Checking backend connection...';
+		this.statusMessage = 'Checking Acheulit connection...';
 		this.lastError = null;
 
 		try {
 			await checkBackendHealth();
-			this.statusMessage = 'Syncing your workspace...';
+			this.statusMessage = 'Syncing Acheulit...';
 			const project = await getOrCreateDefaultProject(accessToken);
 			const sessionList = await listSessions(project.id, accessToken);
 
 			this.currentProject = project;
 			this.sessions = sessionList;
 			this.syncCurrentSession(sessionList);
-			this.setReady('Workspace connected and ready.');
+			this.setReady('Acheulit is connected and ready.');
 		} catch (error) {
 			const normalized = normalizeWorkspaceError(error);
 			const status = getConnectionStatusFromError(normalized);
@@ -117,7 +117,7 @@ class ProjectStore {
 					? 'The backend is unavailable right now. Retry when it is running again.'
 					: status === 'auth_error'
 						? 'Your session could not be verified by the API. Sign in again and retry.'
-						: 'The backend is reachable, but your workspace could not be loaded.';
+						: 'The backend is reachable, but Acheulit could not load your project space.';
 			this.lastError = normalized;
 			this.isInitialized = true;
 		} finally {
@@ -137,7 +137,7 @@ class ProjectStore {
 	): Promise<ChatMessage[]> {
 		try {
 			const events: SessionEvent[] = await listSessionEvents(projectId, sessionId, accessToken);
-			this.setReady('Workspace connected and ready.');
+			this.setReady('Acheulit is connected and ready.');
 			return events
 				.filter((e) => e.role === 'user' || e.role === 'assistant')
 				.map((e) => ({
@@ -160,7 +160,7 @@ class ProjectStore {
 			const session = await createSession(projectId, title, accessToken);
 			this.sessions = [session, ...this.sessions];
 			this.currentSession = session;
-			this.setReady('Workspace connected and ready.');
+			this.setReady('Acheulit is connected and ready.');
 			return session;
 		} catch (error) {
 			this.reportRuntimeError(error, 'A new chat could not be created.');
@@ -180,7 +180,7 @@ class ProjectStore {
 			if (this.currentSession?.id === sessionId) {
 				this.currentSession = nextSessions[0] ?? null;
 			}
-			this.setReady('Workspace connected and ready.');
+			this.setReady('Acheulit is connected and ready.');
 		} catch (error) {
 			this.reportRuntimeError(error, 'The chat session could not be removed.');
 			throw error;

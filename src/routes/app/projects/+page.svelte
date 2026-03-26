@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { goto } from "$app/navigation";
 	import { auth } from "$lib/auth";
 	import {
 		listAssetVersions,
@@ -11,6 +12,7 @@
 	import { Button } from "$lib/components/ui/button/index.js";
 	import * as Card from "$lib/components/ui/card/index.js";
 	import { Input } from "$lib/components/ui/input/index.js";
+	import { assistantIntentState } from "$lib/stores/assistant-intent.svelte";
 	import { agentPanelState } from "$lib/stores/agent-panel.svelte";
 	import { projectStore } from "$lib/stores/project.svelte";
 	import { workspaceSearchStore } from "$lib/stores/workspace-search.svelte";
@@ -482,11 +484,11 @@
 		});
 	}
 
-	function openRecentSession(sessionId: string) {
+	async function openRecentSession(sessionId: string) {
 		const session = projectStore.sessions.find((entry) => entry.id === sessionId);
 		if (!session) return;
 		projectStore.currentSession = session;
-		agentPanelState.open();
+		await goto("/app");
 	}
 
 	async function refreshLibrary(options: { focusAssetId?: string } = {}): Promise<void> {
@@ -554,7 +556,7 @@
 </script>
 
 <svelte:head>
-	<title>Projects - Workspace</title>
+	<title>Library - Acheulit</title>
 </svelte:head>
 
 <div class="flex flex-col gap-6">
@@ -567,16 +569,16 @@
 							variant="outline"
 							class="rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground"
 						>
-							Project library
+							Supporting surface
 						</Badge>
 						<div class="space-y-2">
 							<h1 class="text-3xl font-semibold tracking-tight sm:text-4xl">
-								{currentProject?.name ?? "Workspace library"}
+								{currentProject?.name ?? "Project library"}
 							</h1>
 							<p class="max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
-								Keep uploads, generated assets, and reference material in one project-scoped
-								library. The header search now filters this page across file names, folder
-								paths, sources, and asset types.
+								Start in chat, then use the library to inspect uploads, generated assets, and
+								reference material without losing the active project thread. The header search
+								filters this page across file names, folder paths, sources, and asset types.
 							</p>
 						</div>
 					</div>
@@ -600,10 +602,15 @@
 						<Button
 							variant="outline"
 							class="gap-2 rounded-full px-4"
-							onclick={() => agentPanelState.open()}
+							href="/app"
+							onclick={() =>
+								assistantIntentState.queue(
+									"Review the current library, summarize the strongest inputs, and tell me what is still missing.",
+									"library-surface",
+								)}
 						>
 							<Sparkles class="size-4" />
-							Open Agent
+							Continue in Chat
 						</Button>
 					</div>
 				</div>
