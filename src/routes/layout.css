@@ -37,6 +37,26 @@
 	--sidebar-accent-foreground: oklch(0.205 0 0);
 	--sidebar-border: oklch(0.922 0 0);
 	--sidebar-ring: oklch(0.708 0 0);
+	--surface-hero: oklch(0.985 0.004 255);
+	--surface-panel: oklch(0.995 0.001 255);
+	--surface-elevated: oklch(0.992 0.001 255);
+	--surface-muted: oklch(0.975 0.002 255);
+	--surface-accent: oklch(0.968 0.004 255);
+	--surface-shell-header: oklch(0.992 0.001 255 / 0.92);
+	--surface-shell-input: oklch(0.975 0.001 255);
+	--shell-frame-bg: oklch(0.988 0.001 255);
+	--shell-border-soft: oklch(0.93 0.002 255);
+	--shell-border-strong: oklch(0.9 0.002 255);
+	--radius-shell-panel: 1.5rem;
+	--radius-shell-block: 1rem;
+	--radius-shell-pill: 999px;
+	--shadow-shell-soft: 0 12px 32px -24px rgb(15 23 42 / 0.16);
+	--shadow-shell-medium: 0 18px 44px -28px rgb(15 23 42 / 0.18);
+	--shadow-shell-strong: 0 24px 56px -32px rgb(15 23 42 / 0.22);
+	--shell-content-max-width: 1520px;
+	--shell-panel-default-width: 420px;
+	--shell-panel-min-width: 380px;
+	--shell-panel-max-width: 760px;
 }
 
 .dark {
@@ -71,6 +91,16 @@
 	--sidebar-accent-foreground: oklch(0.985 0 0);
 	--sidebar-border: oklch(1 0 0 / 10%);
 	--sidebar-ring: oklch(0.556 0 0);
+	--surface-hero: oklch(0.235 0.004 255);
+	--surface-panel: oklch(0.205 0.002 255);
+	--surface-elevated: oklch(0.225 0.003 255);
+	--surface-muted: oklch(0.255 0.002 255);
+	--surface-accent: oklch(0.28 0.003 255);
+	--surface-shell-header: oklch(0.205 0.002 255 / 0.94);
+	--surface-shell-input: oklch(0.235 0.002 255);
+	--shell-frame-bg: oklch(0.18 0.002 255);
+	--shell-border-soft: oklch(0.3 0.002 255);
+	--shell-border-strong: oklch(0.35 0.002 255);
 }
 
 @theme inline {
@@ -121,9 +151,13 @@
 	}
 	body {
 		@apply bg-background text-foreground;
+		height: 100%;
+		min-height: 100svh;
 	}
 	html {
 		@apply font-sans;
+		height: 100%;
+		min-height: 100%;
 	}
 }
 

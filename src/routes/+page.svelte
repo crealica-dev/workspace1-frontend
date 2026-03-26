@@ -6,10 +6,16 @@
 	import * as Alert from "$lib/components/ui/alert/index.js";
 	import * as Tabs from "$lib/components/ui/tabs/index.js";
 	import { Badge } from "$lib/components/ui/badge/index.js";
+	import {
+		interactiveItemVariants,
+		supportingCopyClass,
+		surfaceVariants,
+	} from "$lib/design/index.js";
 	import { CircleAlert, Loader2 } from "@lucide/svelte";
 
 	import { auth } from "$lib/auth";
 	import { apiBaseUrl, hasSupabaseConfig, supabaseConfigError } from "$lib/config";
+	import { cn } from "$lib/utils.js";
 
 	const { session, user, loading, notice } = auth;
 
@@ -27,6 +33,17 @@
 		event.preventDefault();
 		await auth.signUpWithPassword(signUpEmail, signUpPassword);
 	}
+
+	const featureCardClass = cn(
+		interactiveItemVariants({ tone: "card", density: "spacious" }),
+		"flex h-full flex-col",
+	);
+	const authCardClass = surfaceVariants({
+		tone: "panel",
+		radius: "panel",
+		padding: "none",
+		emphasis: "soft",
+	});
 </script>
 
 <svelte:head>
@@ -41,7 +58,7 @@
 	<div class="mx-auto grid max-w-screen-xl gap-10 px-4 py-10 sm:px-6 lg:grid-cols-[1fr_420px] lg:gap-14 lg:px-8 lg:py-20">
 		<div class="flex flex-col justify-center">
 			<div class="mb-6 flex items-center gap-4">
-				<div class="flex size-14 items-center justify-center rounded-[1.6rem] border border-border/70 bg-white p-2.5 shadow-sm">
+				<div class="flex size-14 items-center justify-center rounded-3xl border border-border/70 bg-white p-2.5 shadow-sm">
 					<img
 						src="/brand/acheulit-logo.png"
 						alt="Acheulit logo"
@@ -75,48 +92,48 @@
 			</p>
 
 			<div class="mt-10 grid gap-4 sm:grid-cols-2">
-				<Card.Root>
+				<Card.Root class={featureCardClass}>
 					<Card.Header>
 						<Card.Title>Project-scoped context</Card.Title>
 					</Card.Header>
 					<Card.Content>
-						<p class="text-muted-foreground text-sm">
+						<p class={supportingCopyClass}>
 							Keep projects, sessions, assets, and working context aligned from the first
 							screen.
 						</p>
 					</Card.Content>
 				</Card.Root>
 
-				<Card.Root>
+				<Card.Root class={featureCardClass}>
 					<Card.Header>
 						<Card.Title>Shared asset library</Card.Title>
 					</Card.Header>
 					<Card.Content>
-						<p class="text-muted-foreground text-sm">
+						<p class={supportingCopyClass}>
 							Store uploads, references, and generated files in one place so every project
 							stays organized.
 						</p>
 					</Card.Content>
 				</Card.Root>
 
-				<Card.Root>
+				<Card.Root class={featureCardClass}>
 					<Card.Header>
 						<Card.Title>Guided assistant</Card.Title>
 					</Card.Header>
 					<Card.Content>
-						<p class="text-muted-foreground text-sm">
+						<p class={supportingCopyClass}>
 							Open the assistant to review activity, plan next steps, and move from quick
 							asks into deeper workflow work.
 						</p>
 					</Card.Content>
 				</Card.Root>
 
-				<Card.Root>
+				<Card.Root class={featureCardClass}>
 					<Card.Header>
 						<Card.Title>Secure access</Card.Title>
 					</Card.Header>
 					<Card.Content>
-						<p class="text-muted-foreground text-sm">
+						<p class={supportingCopyClass}>
 							Sign in securely and open Acheulit with your projects, conversations, and
 							library ready to go.
 						</p>
@@ -126,7 +143,7 @@
 		</div>
 
 		<div class="flex items-start justify-center lg:justify-end">
-			<Card.Root class="w-full max-w-md">
+			<Card.Root class={cn(authCardClass, "w-full max-w-md")}>
 				<Card.Header class="space-y-1">
 					<Card.Title class="text-2xl">Sign in to Acheulit</Card.Title>
 					<Card.Description>

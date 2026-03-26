@@ -2,14 +2,20 @@
 	import ClapperboardIcon from "@lucide/svelte/icons/clapperboard";
 	import FolderKanbanIcon from "@lucide/svelte/icons/folder-kanban";
 	import LayoutDashboardIcon from "@lucide/svelte/icons/layout-dashboard";
+	import MessageSquareIcon from "@lucide/svelte/icons/message-square";
 	import WorkflowIcon from "@lucide/svelte/icons/workflow";
 
 	const data = {
 		navMain: [
 			{
-				title: "Chat",
+				title: "Overview",
 				url: "/app",
 				icon: LayoutDashboardIcon,
+			},
+			{
+				title: "Chat",
+				url: "/app/chat",
+				icon: MessageSquareIcon,
 			},
 			{
 				title: "Library",
@@ -31,12 +37,24 @@
 </script>
 
 <script lang="ts">
+	import {
+		sidebarActionButtonClass,
+		sidebarBrandCollapsedButtonClass,
+		sidebarBrandCollapsedLogoClass,
+		sidebarBrandExpandedClass,
+		sidebarBrandLogoClass,
+		sidebarBrandMetaClass,
+		sidebarBrandTaglineClass,
+		sidebarBrandTitleClass,
+		sidebarStatusBadgeClass,
+		sidebarSupportCardClass,
+		sidebarSupportCopyClass,
+		workspaceStatusTone,
+	} from "$lib/design/index.js";
 	import { Badge } from "$lib/components/ui/badge/index.js";
 	import { Button } from "$lib/components/ui/button/index.js";
 	import * as Sidebar from "$lib/components/ui/sidebar/index.js";
-	import { agentPanelState } from "$lib/stores/agent-panel.svelte";
 	import { projectStore } from "$lib/stores/project.svelte";
-	import type { WorkspaceConnectionStatus } from "$lib/api/projects";
 	import NavMain from "./nav-main.svelte";
 	import NavUser from "./nav-user.svelte";
 	import SparklesIcon from "@lucide/svelte/icons/sparkles";
@@ -53,98 +71,72 @@
 
 	const currentProject = $derived(projectStore.currentProject);
 	const workspaceStatus = $derived(projectStore.status);
-
-	function getStatusMeta(status: WorkspaceConnectionStatus) {
-		switch (status) {
-			case "ready":
-				return {
-					label: "Connected",
-					className:
-						"text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-900 bg-emerald-50 dark:bg-emerald-950/40",
-				};
-			case "checking":
-				return {
-					label: "Syncing",
-					className:
-						"text-sky-700 dark:text-sky-300 border-sky-200 dark:border-sky-900 bg-sky-50 dark:bg-sky-950/40",
-				};
-			case "auth_error":
-				return {
-					label: "Auth issue",
-					className:
-						"text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-900 bg-amber-50 dark:bg-amber-950/40",
-				};
-			case "backend_down":
-				return {
-					label: "Backend down",
-					className:
-						"text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-900 bg-rose-50 dark:bg-rose-950/40",
-				};
-			default:
-				return {
-					label: "Sync failed",
-					className:
-						"text-orange-700 dark:text-orange-300 border-orange-200 dark:border-orange-900 bg-orange-50 dark:bg-orange-950/40",
-				};
-		}
-	}
-
-	const statusMeta = $derived(getStatusMeta(workspaceStatus));
+	const statusMeta = $derived(
+		workspaceStatusTone(workspaceStatus, projectStore.statusMessage),
+	);
 </script>
 
 <Sidebar.Root bind:ref {collapsible} {...restProps}>
-	<Sidebar.Header class="gap-3 px-2 py-3">
-		<Sidebar.Menu>
+	<Sidebar.Header class="gap-4 px-2 py-3 group-data-[collapsible=icon]:items-center group-data-[collapsible=icon]:px-0">
+		<a
+			href="/app"
+			class={`${sidebarBrandExpandedClass} group-data-[collapsible=icon]:hidden`}
+		>
+			<img
+				src="/brand/acheulit-logo.png"
+				alt="Acheulit logo"
+				class={sidebarBrandLogoClass}
+			/>
+			<div class={sidebarBrandMetaClass}>
+				<span class={sidebarBrandTitleClass}>Acheulit</span>
+				<span class={sidebarBrandTaglineClass}>
+					Content workflow platform
+				</span>
+			</div>
+		</a>
+
+		<Sidebar.Menu class="hidden group-data-[collapsible=icon]:block">
 			<Sidebar.MenuItem>
-				<Sidebar.MenuButton size="lg" class="rounded-xl px-3 py-2.5">
-					<div
-						class="flex aspect-square size-9 items-center justify-center rounded-2xl border border-sidebar-border/80 bg-white p-1.5 shadow-sm"
-					>
-						<img
-							src="/brand/acheulit-logo.png"
-							alt="Acheulit logo"
-							class="size-full object-contain"
-						/>
-					</div>
-					<div class="grid flex-1 text-start text-sm leading-tight">
-						<span class="truncate font-semibold">Acheulit</span>
-						<span class="truncate text-xs text-sidebar-foreground/65">Content workflow platform</span>
-					</div>
+				<Sidebar.MenuButton
+					tooltipContent="Acheulit"
+					class={sidebarBrandCollapsedButtonClass}
+				>
+					{#snippet child({ props })}
+						<a href="/app" {...props} aria-label="Acheulit home">
+							<img
+								src="/brand/acheulit-logo.png"
+								alt="Acheulit logo"
+								class={sidebarBrandCollapsedLogoClass}
+							/>
+						</a>
+					{/snippet}
 				</Sidebar.MenuButton>
 			</Sidebar.MenuItem>
 		</Sidebar.Menu>
 
 		<div class="group-data-[collapsible=icon]:hidden px-2">
-			<div class="rounded-2xl border border-sidebar-border/70 bg-sidebar-accent/30 p-3">
+			<div class={sidebarSupportCardClass}>
 				<div class="flex items-start justify-between gap-3">
-					<!-- <div class="min-w-0">
-						<p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-sidebar-foreground/55">
-							Acheulit Assistant
-						</p>
-						<p class="mt-1 text-sm font-medium leading-5">
-							Plan tasks, keep project context organized, and move AI work forward.
-						</p>
-					</div> -->
 					<Badge
 						variant="outline"
-						class="shrink-0 rounded-full px-2 py-0.5 text-[10px] {statusMeta.className}"
+						class={`${sidebarStatusBadgeClass} ${statusMeta.badgeClass}`}
 					>
 						{statusMeta.label}
 					</Badge>
 				</div>
-				<p class="mt-3 text-xs leading-5 text-sidebar-foreground/70">
+				<p class={sidebarSupportCopyClass}>
 					{currentProject
 						? `Current project: ${currentProject.name}`
-						: "Start in chat, then branch into library, studio, or flows without losing context."}
+						: "Keep Overview calm, then move into chat, library, studio, or workflows when needed."}
 				</p>
 				<Button
 					variant="secondary"
 					size="sm"
-					class="mt-3 w-full justify-center gap-2 rounded-xl"
-					href="/app"
+					class={sidebarActionButtonClass}
+					href="/app/chat"
 				>
 					<SparklesIcon class="size-3.5" />
-					Continue in Chat
+					Open chat
 				</Button>
 			</div>
 		</div>

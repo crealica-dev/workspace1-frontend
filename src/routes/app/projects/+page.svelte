@@ -12,10 +12,18 @@
 	import { Button } from "$lib/components/ui/button/index.js";
 	import * as Card from "$lib/components/ui/card/index.js";
 	import { Input } from "$lib/components/ui/input/index.js";
+	import {
+		eyebrowBadgeClass,
+		interactiveItemVariants,
+		metricLabelClass,
+		supportingCopyClass,
+		surfaceVariants,
+	} from "$lib/design/index.js";
 	import { assistantIntentState } from "$lib/stores/assistant-intent.svelte";
 	import { agentPanelState } from "$lib/stores/agent-panel.svelte";
 	import { projectStore } from "$lib/stores/project.svelte";
 	import { workspaceSearchStore } from "$lib/stores/workspace-search.svelte";
+	import { cn } from "$lib/utils.js";
 	import {
 		Clock3,
 		ExternalLink,
@@ -259,6 +267,68 @@
 			return getPreviewUrl(asset) && (kind === "image" || kind === "video" || kind === "audio");
 		}).length,
 	);
+	const heroSurfaceClass = surfaceVariants({
+		tone: "hero",
+		radius: "panel",
+		padding: "lg",
+		emphasis: "soft",
+	});
+	const noteSurfaceClass = surfaceVariants({
+		tone: "panel",
+		radius: "panel",
+		padding: "md",
+		emphasis: "soft",
+	});
+	const metricSurfaceClass = surfaceVariants({
+		tone: "elevated",
+		radius: "block",
+		padding: "md",
+		emphasis: "flat",
+	});
+	const panelSurfaceClass = cn(
+		surfaceVariants({
+			tone: "panel",
+			radius: "panel",
+			padding: "none",
+			emphasis: "soft",
+		}),
+		"ring-0",
+	);
+	const mutedBlockClass = surfaceVariants({
+		tone: "muted",
+		radius: "block",
+		padding: "md",
+		emphasis: "flat",
+	});
+	const previewFrameClass = cn(
+		surfaceVariants({
+			tone: "muted",
+			radius: "panel",
+			padding: "sm",
+			emphasis: "flat",
+		}),
+		"overflow-hidden",
+	);
+	const metadataSurfaceClass = surfaceVariants({
+		tone: "muted",
+		radius: "block",
+		padding: "md",
+		emphasis: "flat",
+	});
+	const emptyStateSurfaceClass = cn(
+		surfaceVariants({
+			tone: "ghost",
+			radius: "panel",
+			padding: "lg",
+			emphasis: "flat",
+		}),
+		"text-center",
+	);
+	const quietBadgeClass = "rounded-full border-border/70 bg-background/80";
+	const recentSessionRowClass = cn(
+		interactiveItemVariants({ tone: "card", density: "regular" }),
+		"flex w-full items-center gap-3 shadow-sm",
+	);
 
 	const activeFolderLabel = $derived(
 		folderEntries.find((entry) => entry.key === activeFolder)?.path ??
@@ -271,6 +341,37 @@
 				? activeFolder
 				: undefined),
 	);
+
+	function getFolderEntryClass(isActive: boolean): string {
+		return cn(
+			interactiveItemVariants({
+				tone: isActive ? "selected" : "row",
+				density: "compact",
+			}),
+			"flex w-full items-center justify-between text-sm",
+			!isActive && "text-muted-foreground",
+		);
+	}
+
+	function getFilterPillClass(isActive: boolean): string {
+		return cn(
+			interactiveItemVariants({
+				tone: isActive ? "selected" : "pill",
+				density: "compact",
+			}),
+			"rounded-full text-xs font-medium",
+		);
+	}
+
+	function getAssetCardClass(isSelected: boolean): string {
+		return cn(
+			interactiveItemVariants({
+				tone: isSelected ? "selected" : "card",
+				density: "compact",
+			}),
+			"group w-full overflow-hidden p-0 text-left shadow-sm transition-transform hover:-translate-y-px",
+		);
+	}
 
 	$effect(() => {
 		const projectId = currentProject?.id;
@@ -488,7 +589,7 @@
 		const session = projectStore.sessions.find((entry) => entry.id === sessionId);
 		if (!session) return;
 		projectStore.currentSession = session;
-		await goto("/app");
+		await goto("/app/chat");
 	}
 
 	async function refreshLibrary(options: { focusAssetId?: string } = {}): Promise<void> {
@@ -559,23 +660,22 @@
 	<title>Library - Acheulit</title>
 </svelte:head>
 
-<div class="flex flex-col gap-6">
-	<section class="grid gap-4 xl:grid-cols-[minmax(0,1.55fr)_minmax(320px,0.95fr)]">
-		<Card.Root class="overflow-hidden border-border/70 bg-gradient-to-br from-background via-background to-muted/35 shadow-sm">
+<div class="flex h-full min-h-0 flex-col overflow-hidden">
+	<div class="min-h-0 flex-1 overflow-y-auto pr-1">
+		<div class="flex flex-col gap-6">
+			<section class="grid gap-4 xl:grid-cols-[minmax(0,1.55fr)_minmax(320px,0.95fr)]">
+		<Card.Root class={heroSurfaceClass}>
 			<Card.Content class="flex h-full flex-col gap-6 p-6 sm:p-7">
 				<div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
 					<div class="space-y-3">
-						<Badge
-							variant="outline"
-							class="rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground"
-						>
+						<Badge variant="outline" class={eyebrowBadgeClass}>
 							Supporting surface
 						</Badge>
 						<div class="space-y-2">
 							<h1 class="text-3xl font-semibold tracking-tight sm:text-4xl">
 								{currentProject?.name ?? "Project library"}
 							</h1>
-							<p class="max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
+							<p class={cn(supportingCopyClass, "max-w-2xl sm:text-base")}>
 								Start in chat, then use the library to inspect uploads, generated assets, and
 								reference material without losing the active project thread. The header search
 								filters this page across file names, folder paths, sources, and asset types.
@@ -602,7 +702,7 @@
 						<Button
 							variant="outline"
 							class="gap-2 rounded-full px-4"
-							href="/app"
+							href="/app/chat"
 							onclick={() =>
 								assistantIntentState.queue(
 									"Review the current library, summarize the strongest inputs, and tell me what is still missing.",
@@ -610,14 +710,14 @@
 								)}
 						>
 							<Sparkles class="size-4" />
-							Continue in Chat
+							Chat
 						</Button>
 					</div>
 				</div>
 
 				<div class="grid gap-3 md:grid-cols-3">
-					<div class="rounded-2xl border border-border/70 bg-background/85 p-4 shadow-sm">
-						<p class="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+					<div class={metricSurfaceClass}>
+						<p class={metricLabelClass}>
 							Assets
 						</p>
 						<p class="mt-3 text-3xl font-semibold tracking-tight">{sortedAssets.length}</p>
@@ -625,8 +725,8 @@
 							All project uploads and generated files stay grouped here.
 						</p>
 					</div>
-					<div class="rounded-2xl border border-border/70 bg-background/85 p-4 shadow-sm">
-						<p class="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+					<div class={metricSurfaceClass}>
+						<p class={metricLabelClass}>
 							Folders
 						</p>
 						<p class="mt-3 text-3xl font-semibold tracking-tight">{totalFolderCount}</p>
@@ -634,8 +734,8 @@
 							Folder paths mirror the backend library structure for cleaner retrieval.
 						</p>
 					</div>
-					<div class="rounded-2xl border border-border/70 bg-background/85 p-4 shadow-sm">
-						<p class="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+					<div class={metricSurfaceClass}>
+						<p class={metricLabelClass}>
 							Preview-ready
 						</p>
 						<p class="mt-3 text-3xl font-semibold tracking-tight">{previewableCount}</p>
@@ -647,7 +747,7 @@
 			</Card.Content>
 		</Card.Root>
 
-		<Card.Root class="border-border/70 shadow-sm">
+		<Card.Root class={noteSurfaceClass}>
 			<Card.Header>
 				<Card.Title>Library notes</Card.Title>
 				<Card.Description>
@@ -655,8 +755,8 @@
 				</Card.Description>
 			</Card.Header>
 			<Card.Content class="space-y-3">
-				<div class="rounded-2xl border border-border/70 bg-muted/25 p-4">
-					<p class="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+				<div class={mutedBlockClass}>
+					<p class={metricLabelClass}>
 						Storage path
 					</p>
 					<p class="mt-2 text-sm font-medium leading-6">
@@ -667,8 +767,8 @@
 					</p>
 				</div>
 
-				<div class="rounded-2xl border border-border/70 bg-muted/25 p-4">
-					<p class="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+				<div class={mutedBlockClass}>
+					<p class={metricLabelClass}>
 						Header search
 					</p>
 					<p class="mt-2 text-sm font-medium leading-6">
@@ -681,8 +781,8 @@
 					</p>
 				</div>
 
-				<div class="rounded-2xl border border-border/70 bg-muted/25 p-4">
-					<p class="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+				<div class={mutedBlockClass}>
+					<p class={metricLabelClass}>
 						Upload target
 					</p>
 					<p class="mt-2 text-sm font-medium leading-6">
@@ -697,7 +797,7 @@
 	</section>
 
 	<section id="library" class="grid gap-4 xl:grid-cols-[260px_minmax(0,1fr)_340px]">
-		<Card.Root class="border-border/70 shadow-sm">
+		<Card.Root class={panelSurfaceClass}>
 			<Card.Header>
 				<Card.Title>Folder structure</Card.Title>
 				<Card.Description>Browse root files, nested folders, and source-specific slices.</Card.Description>
@@ -712,11 +812,7 @@
 						{#each folderEntries as entry (entry.key)}
 							<button
 								type="button"
-								class={`flex w-full items-center justify-between rounded-xl border px-3 py-2 text-left text-sm transition ${
-									activeFolder === entry.key
-										? "border-primary/40 bg-primary/8 text-foreground shadow-sm"
-										: "border-transparent bg-muted/25 text-muted-foreground hover:border-border/70 hover:bg-muted/45 hover:text-foreground"
-								}`}
+								class={getFolderEntryClass(activeFolder === entry.key)}
 								style={`padding-left: ${0.75 + entry.depth * 0.8}rem;`}
 								onclick={() => {
 									activeFolder = entry.key;
@@ -746,11 +842,7 @@
 						{#each typeEntries as entry (entry.key)}
 							<button
 								type="button"
-								class={`rounded-full border px-3 py-1.5 text-xs font-medium transition ${
-									activeType === entry.key
-										? "border-primary/40 bg-primary/8 text-foreground"
-										: "border-border/70 bg-background text-muted-foreground hover:text-foreground"
-								}`}
+								class={getFilterPillClass(activeType === entry.key)}
 								onclick={() => {
 									activeType = entry.key;
 								}}
@@ -769,11 +861,7 @@
 						{#each sourceEntries as entry (entry.key)}
 							<button
 								type="button"
-								class={`rounded-full border px-3 py-1.5 text-xs font-medium transition ${
-									activeSource === entry.key
-										? "border-primary/40 bg-primary/8 text-foreground"
-										: "border-border/70 bg-background text-muted-foreground hover:text-foreground"
-								}`}
+								class={getFilterPillClass(activeSource === entry.key)}
 								onclick={() => {
 									activeSource = entry.key;
 								}}
@@ -786,7 +874,7 @@
 			</Card.Content>
 		</Card.Root>
 
-		<Card.Root class="border-border/70 shadow-sm">
+		<Card.Root class={panelSurfaceClass}>
 			<Card.Header class="gap-4 border-b pb-4">
 				<div class="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
 					<div class="space-y-1">
@@ -843,7 +931,7 @@
 				{:else if libraryLoading && !sortedAssets.length}
 					<div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
 						{#each Array.from({ length: 6 }) as _, index (index)}
-							<div class="overflow-hidden rounded-3xl border border-border/70 bg-muted/25 p-3">
+							<div class={previewFrameClass}>
 								<div class="aspect-[4/3] animate-pulse rounded-2xl bg-muted"></div>
 								<div class="mt-3 space-y-2">
 									<div class="h-4 w-2/3 animate-pulse rounded bg-muted"></div>
@@ -853,7 +941,7 @@
 						{/each}
 					</div>
 				{:else if !visibleAssets.length}
-					<div class="flex flex-col items-center justify-center rounded-3xl border border-dashed bg-muted/20 px-6 py-16 text-center">
+					<div class={cn(emptyStateSurfaceClass, "flex flex-col items-center justify-center px-6 py-16")}>
 						<div class="flex size-14 items-center justify-center rounded-3xl bg-primary/10 text-primary">
 							<FolderOpen class="size-6" />
 						</div>
@@ -893,11 +981,7 @@
 							{@const assetPreviewUrl = getPreviewUrl(asset)}
 							<button
 								type="button"
-								class={`group overflow-hidden rounded-3xl border bg-background text-left shadow-sm transition hover:-translate-y-[1px] hover:border-primary/35 hover:bg-muted/30 ${
-									selectedAsset?.id === asset.id
-										? "border-primary/40 ring-1 ring-primary/20"
-										: "border-border/70"
-								}`}
+								class={getAssetCardClass(selectedAsset?.id === asset.id)}
 								onclick={() => {
 									selectedAssetId = asset.id;
 								}}
@@ -931,7 +1015,7 @@
 										<Badge variant="outline" class={getAssetKindBadgeClass(assetKind)}>
 											{getAssetKindLabel(assetKind)}
 										</Badge>
-										<Badge variant="outline" class="rounded-full border-border/70 bg-background/80">
+										<Badge variant="outline" class={quietBadgeClass}>
 											{humanizeSource(getAssetSource(asset))}
 										</Badge>
 									</div>
@@ -954,7 +1038,7 @@
 		</Card.Root>
 
 		<div class="flex flex-col gap-4">
-			<Card.Root class="border-border/70 shadow-sm">
+			<Card.Root class={panelSurfaceClass}>
 				<Card.Header>
 					<Card.Title>Preview</Card.Title>
 					<Card.Description>
@@ -967,7 +1051,7 @@
 						{@const selectedAssetPreviewUrl = getPreviewUrl(selectedAsset)}
 						{@const selectedAssetSource = getAssetSource(selectedAsset)}
 						{@const SelectedAssetIcon = getAssetKindIcon(selectedAssetKind)}
-						<div class="overflow-hidden rounded-3xl border border-border/70 bg-muted/25 p-3">
+						<div class={previewFrameClass}>
 							{#if selectedAssetKind === "image" && selectedAssetPreviewUrl}
 								<img
 									src={selectedAssetPreviewUrl}
@@ -1007,7 +1091,7 @@
 								<Badge variant="outline" class={getAssetKindBadgeClass(selectedAssetKind)}>
 									{getAssetKindLabel(selectedAssetKind)}
 								</Badge>
-								<Badge variant="outline" class="rounded-full border-border/70 bg-background/80">
+								<Badge variant="outline" class={quietBadgeClass}>
 									{humanizeSource(selectedAssetSource)}
 								</Badge>
 							</div>
@@ -1018,13 +1102,13 @@
 								</p>
 							</div>
 							<div class="grid gap-3 text-sm sm:grid-cols-2">
-								<div class="rounded-2xl border border-border/70 bg-muted/20 px-4 py-3">
+								<div class={metadataSurfaceClass}>
 									<p class="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
 										File type
 									</p>
 									<p class="mt-2 font-medium">{selectedAsset.mime_type ?? selectedAsset.asset_type}</p>
 								</div>
-								<div class="rounded-2xl border border-border/70 bg-muted/20 px-4 py-3">
+								<div class={metadataSurfaceClass}>
 									<p class="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
 										Updated
 									</p>
@@ -1041,19 +1125,20 @@
 								Ask in chat
 							</Button>
 							{#if selectedAssetPreviewUrl}
-								<a
+								<Button
+									variant="outline"
+									class="gap-2 rounded-xl"
 									href={selectedAssetPreviewUrl}
 									target="_blank"
 									rel="noreferrer"
-									class="inline-flex h-9 items-center gap-2 rounded-xl border border-input bg-background px-3 text-sm font-medium shadow-xs transition hover:bg-accent hover:text-accent-foreground"
 								>
 									<ExternalLink class="size-4" />
 									Open file
-								</a>
+								</Button>
 							{/if}
 						</div>
 					{:else}
-						<div class="rounded-3xl border border-dashed bg-muted/20 px-5 py-10 text-center">
+						<div class={emptyStateSurfaceClass}>
 							<p class="text-sm font-medium">Choose an asset to preview it here.</p>
 							<p class="mt-2 text-sm leading-6 text-muted-foreground">
 								The right rail will show signed previews, MIME details, and version history.
@@ -1063,7 +1148,7 @@
 				</Card.Content>
 			</Card.Root>
 
-			<Card.Root class="border-border/70 shadow-sm">
+			<Card.Root class={panelSurfaceClass}>
 				<Card.Header>
 					<Card.Title>Versions</Card.Title>
 					<Card.Description>Latest stored revisions for the current library item.</Card.Description>
@@ -1076,20 +1161,20 @@
 					{:else if versionsLoading}
 						<div class="space-y-2">
 							{#each Array.from({ length: 3 }) as _, index (index)}
-								<div class="rounded-2xl border border-border/70 bg-muted/20 px-4 py-4">
+								<div class={metadataSurfaceClass}>
 									<div class="h-4 w-1/2 animate-pulse rounded bg-muted"></div>
 									<div class="mt-2 h-3 w-2/3 animate-pulse rounded bg-muted"></div>
 								</div>
 							{/each}
 						</div>
 					{:else if !assetVersions.length}
-						<div class="rounded-2xl border border-dashed bg-muted/20 px-4 py-6 text-sm leading-6 text-muted-foreground">
+						<div class={cn(emptyStateSurfaceClass, "text-sm leading-6 text-muted-foreground")}>
 							Version history appears here after an asset is selected.
 						</div>
 					{:else}
 						<div class="space-y-2">
 							{#each assetVersions as version (version.id)}
-								<div class="rounded-2xl border border-border/70 bg-muted/20 px-4 py-4">
+								<div class={metadataSurfaceClass}>
 									<div class="flex items-start justify-between gap-3">
 										<div class="min-w-0">
 											<p class="truncate text-sm font-medium">
@@ -1100,14 +1185,16 @@
 											</p>
 										</div>
 										{#if getVersionPreviewUrl(version)}
-											<a
+											<Button
+												variant="outline"
+												size="icon-sm"
+												class="shrink-0 rounded-full"
 												href={getVersionPreviewUrl(version) ?? "#"}
 												target="_blank"
 												rel="noreferrer"
-												class="inline-flex size-8 shrink-0 items-center justify-center rounded-full border border-border/70 bg-background text-muted-foreground transition hover:text-foreground"
 											>
 												<ExternalLink class="size-3.5" />
-											</a>
+											</Button>
 										{/if}
 									</div>
 								</div>
@@ -1117,21 +1204,21 @@
 				</Card.Content>
 			</Card.Root>
 
-			<Card.Root class="border-border/70 shadow-sm">
+			<Card.Root class={panelSurfaceClass}>
 				<Card.Header>
 					<Card.Title>Recent sessions</Card.Title>
 					<Card.Description>Jump from the library into the latest project-aware chats.</Card.Description>
 				</Card.Header>
 				<Card.Content class="space-y-2">
 					{#if !recentSessions.length}
-						<div class="rounded-2xl border border-dashed bg-muted/20 px-4 py-6 text-sm leading-6 text-muted-foreground">
+						<div class={cn(emptyStateSurfaceClass, "text-sm leading-6 text-muted-foreground")}>
 							Open the agent to start the first session for this project.
 						</div>
 					{:else}
 						{#each recentSessions as session (session.id)}
 							<button
 								type="button"
-								class="flex w-full items-center gap-3 rounded-2xl border border-border/70 bg-background px-4 py-3 text-left shadow-sm transition hover:border-primary/35 hover:bg-muted/30"
+								class={recentSessionRowClass}
 								onclick={() => openRecentSession(session.id)}
 							>
 								<div class="flex size-9 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
@@ -1151,4 +1238,6 @@
 			</Card.Root>
 		</div>
 	</section>
+</div>
+	</div>
 </div>

@@ -46,6 +46,8 @@
 		text: string;
 	};
 
+	type ConversationVariant = "main" | "side-panel";
+
 	type Props = {
 		messages?: ChatMessage[];
 		isLoading?: boolean;
@@ -57,10 +59,7 @@
 		queuedDraft?: PromptDraft | null;
 		afterInput?: Snippet;
 		emptyState?: Snippet;
-		conversationFrameClass?: string;
-		scrollRegionClass?: string;
-		composerShellClass?: string;
-		promptInputClass?: string;
+		variant?: ConversationVariant;
 		children?: Snippet;
 	};
 
@@ -75,14 +74,27 @@
 		queuedDraft = null,
 		afterInput,
 		emptyState,
-		conversationFrameClass = '',
-		scrollRegionClass = '',
-		composerShellClass = '',
-		promptInputClass = '',
+		variant = "main",
 		children,
 	}: Props = $props();
 
 	const scrollContext = setScrollContext();
+	const variantClasses = $derived(
+		variant === "side-panel"
+			? {
+					frame: "bg-[var(--surface-muted)] px-3 pb-0 pt-3",
+					scroll: "rounded-3xl border border-[var(--shell-border-soft)] bg-background px-2 pb-2 pt-2",
+					composer:
+						"border-t border-[var(--shell-border-strong)] px-3 pb-3 pt-3",
+					input: "bg-background shadow-sm",
+				}
+			: {
+					frame: "bg-transparent",
+					scroll: "",
+					composer: "",
+					input: "bg-popover shadow-xs",
+				},
+	);
 
 	let prompt = $state("");
 	let isRecording = $state(false);
@@ -187,8 +199,8 @@
 
 <div class="flex h-full w-full flex-col">
 	{#if showMessages}
-		<div class={cn("relative flex-1 overflow-hidden", conversationFrameClass)}>
-			<div bind:this={containerRef} class={cn("h-full overflow-y-auto py-4", scrollRegionClass)}>
+		<div class={cn("relative flex-1 overflow-hidden", variantClasses.frame)}>
+			<div bind:this={containerRef} class={cn("h-full overflow-y-auto py-4", variantClasses.scroll)}>
 				<ChatContainerRoot class="relative h-full w-full flex-1 space-y-0 overflow-y-auto px-3">
 					<ChatContainerContent class="min-w-full space-y-6 px-2 py-4">
 						{#if emptyState && messages.length === 0 && !isLoading}
@@ -361,7 +373,7 @@
 		</div>
 	{/if}
 
-	<div class={cn("bg-background z-10 shrink-0 px-3 pb-3", composerShellClass)}>
+	<div class={cn("bg-background z-10 shrink-0 px-3 pb-3", variantClasses.composer)}>
 		<div class="mx-auto max-w-full">
 			<PromptInput
 				{isLoading}
@@ -371,7 +383,7 @@
 				onSubmit={handleSubmit}
 				class={cn(
 					"border-input bg-popover relative z-10 w-full rounded-3xl border p-0 pt-1 shadow-xs",
-					promptInputClass,
+					variantClasses.input,
 				)}
 			>
 				<div class="flex flex-col">

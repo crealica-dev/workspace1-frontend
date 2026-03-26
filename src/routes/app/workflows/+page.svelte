@@ -1,8 +1,16 @@
 <script lang="ts">
 	import * as Card from "$lib/components/ui/card/index.js";
 	import { Button } from "$lib/components/ui/button/index.js";
+	import {
+		eyebrowBadgeClass,
+		interactiveItemVariants,
+		sectionTitleClass,
+		supportingCopyClass,
+		surfaceVariants,
+	} from "$lib/design/index.js";
 	import { assistantIntentState } from "$lib/stores/assistant-intent.svelte";
-	import { Workflow, Zap, GitBranch, Clock, Plus, ArrowRight } from "@lucide/svelte";
+	import { cn } from "$lib/utils.js";
+	import { Workflow, Zap, GitBranch, Clock, Plus } from "@lucide/svelte";
 
 	type WorkflowTemplate = {
 		id: string;
@@ -47,92 +55,96 @@
 			category: "Audio",
 		},
 	];
+
+	const heroSurfaceClass = surfaceVariants({
+		tone: "hero",
+		radius: "panel",
+		padding: "lg",
+		emphasis: "soft",
+	});
+	const workflowCardClass = cn(
+		interactiveItemVariants({ tone: "card", density: "spacious" }),
+		"group flex h-full flex-col gap-4",
+	);
 </script>
 
 <svelte:head>
 	<title>Workflows - Acheulit</title>
 </svelte:head>
 
-<div class="space-y-6">
-	<div class="flex items-start justify-between">
-		<div>
-			<h1 class="text-2xl font-bold tracking-tight">Flows</h1>
-			<p class="text-muted-foreground text-sm">
-				Use workflow recipes as guided starting points, then continue the real work in the main
-				chat workspace.
-			</p>
-		</div>
-		<Button
-			class="gap-2"
-			href="/app"
-			onclick={() =>
-				assistantIntentState.queue(
-					"Help me choose the best workflow recipe for this project and explain the next step.",
-					"workflow-surface",
-				)}
-		>
-			<Plus class="size-4" />
-			Continue in Chat
-		</Button>
-	</div>
+<div class="flex h-full min-h-0 flex-col gap-4 overflow-hidden">
+	<Card.Root class={heroSurfaceClass}>
+		<Card.Content class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+			<div class="space-y-3">
+				<div class="space-y-2">
+					<span class={eyebrowBadgeClass}>Workflows</span>
+					<h1 class="text-3xl font-semibold tracking-tight">Flow recipes</h1>
+					<p class={supportingCopyClass}>
+						Reusable recipes for the current project. Start in chat when the path is unclear,
+						then use a recipe once the next move is obvious.
+					</p>
+				</div>
+			</div>
+			<Button
+				class="gap-2 rounded-full px-4"
+				href="/app/chat"
+				onclick={() =>
+					assistantIntentState.queue(
+						"Help me choose the best workflow recipe for this project and explain the next step.",
+						"workflow-surface",
+					)}
+			>
+				<Plus class="size-4" />
+				Chat
+			</Button>
+		</Card.Content>
+	</Card.Root>
 
-	<div>
-		<h2 class="text-muted-foreground mb-3 text-sm font-medium uppercase tracking-wide">
-			Templates
-		</h2>
-		<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-2">
-			{#each templates as tpl (tpl.id)}
-				<Card.Root class="flex flex-col">
-					<Card.Header>
+	<div class="min-h-0 flex-1 overflow-y-auto pr-1">
+		<div>
+			<h2 class="mb-3 text-sm font-medium uppercase tracking-wide text-muted-foreground">
+				Templates
+			</h2>
+			<div class="grid gap-4 sm:grid-cols-2">
+				{#each templates as tpl (tpl.id)}
+					<a
+						href="/app/chat"
+						class={workflowCardClass}
+						onclick={() =>
+							assistantIntentState.queue(
+								`Start the ${tpl.title} workflow for my current project and walk me through the first step.`,
+								`workflow:${tpl.id}`,
+							)}
+					>
 						<div class="flex items-start gap-3">
-							<div class="bg-primary/10 flex size-10 shrink-0 items-center justify-center rounded-lg">
-								<tpl.icon class="text-primary size-5" />
+							<div class="flex size-11 shrink-0 items-center justify-center rounded-2xl border border-border/70 bg-primary/10">
+								<tpl.icon class="size-5 text-primary" />
 							</div>
 							<div class="min-w-0">
 								<div class="flex items-center gap-2">
-									<Card.Title class="text-base">{tpl.title}</Card.Title>
-									<span
-										class="bg-muted text-muted-foreground rounded-full px-2 py-0.5 text-xs"
-									>
+									<p class={sectionTitleClass}>{tpl.title}</p>
+									<span class="rounded-full border border-border/70 bg-[var(--surface-muted)] px-2 py-0.5 text-xs text-muted-foreground">
 										{tpl.category}
 									</span>
 								</div>
-								<Card.Description class="mt-1">{tpl.description}</Card.Description>
+								<p class="mt-2 text-sm leading-6 text-muted-foreground">{tpl.description}</p>
 							</div>
 						</div>
-					</Card.Header>
-					<Card.Content class="mt-auto pt-0">
-						<div class="flex items-center justify-between">
-							<span class="text-muted-foreground text-xs">{tpl.steps} steps</span>
-							<Button
-								variant="outline"
-								size="sm"
-								class="gap-1.5"
-								href="/app"
-								onclick={() =>
-									assistantIntentState.queue(
-										`Start the ${tpl.title} workflow for my current project and walk me through the first step.`,
-										`workflow:${tpl.id}`,
-									)}
-							>
-								Use in Chat
-								<ArrowRight class="size-3.5" />
-							</Button>
-						</div>
-					</Card.Content>
-				</Card.Root>
-			{/each}
+						<span class="mt-auto text-xs text-muted-foreground">{tpl.steps} steps</span>
+					</a>
+				{/each}
+			</div>
 		</div>
-	</div>
 
-	<Card.Root class="border-dashed">
-		<Card.Content class="flex flex-col items-center justify-center py-12 text-center">
-			<Workflow class="text-muted-foreground/50 mb-3 size-10" />
-			<p class="text-muted-foreground text-sm font-medium">Custom workflows coming soon</p>
-			<p class="text-muted-foreground/70 mt-1 max-w-xs text-xs">
-				Custom saved flows can come later. For now, start from chat and keep the workflow steps
-				attached to the active thread.
-			</p>
-		</Card.Content>
-	</Card.Root>
+		<Card.Root class={cn(surfaceVariants({ tone: "ghost", radius: "panel", padding: "lg", emphasis: "flat" }), "mt-6")}>
+			<Card.Content class="flex flex-col items-center justify-center py-12 text-center">
+				<Workflow class="mb-3 size-10 text-muted-foreground/50" />
+				<p class="text-sm font-medium text-muted-foreground">Custom workflows coming soon</p>
+				<p class="mt-1 max-w-xs text-xs text-muted-foreground/70">
+					Custom saved flows can come later. For now, start from chat and keep the workflow
+					steps attached to the active thread.
+				</p>
+			</Card.Content>
+		</Card.Root>
+	</div>
 </div>

@@ -4,6 +4,7 @@
 	import AgentPanel from "$lib/components/agent-panel.svelte";
 	import AppSidebar from "$lib/components/app-sidebar.svelte";
 	import { auth } from "$lib/auth";
+	import { shellLayoutVariants, workspaceStatusTone } from "$lib/design/index.js";
 	import { Badge } from "$lib/components/ui/badge/index.js";
 	import * as Breadcrumb from "$lib/components/ui/breadcrumb/index.js";
 	import { Button } from "$lib/components/ui/button/index.js";
@@ -13,11 +14,12 @@
 	import { projectStore } from "$lib/stores/project.svelte";
 	import { agentPanelState } from "$lib/stores/agent-panel.svelte";
 	import { workspaceSearchStore } from "$lib/stores/workspace-search.svelte";
-	import { Search, Sparkles } from "@lucide/svelte";
-	import type { WorkspaceConnectionStatus } from "$lib/api/projects";
+	import { cn } from "$lib/utils.js";
+	import { ChevronLeft, ChevronRight, Search, Sparkles } from "@lucide/svelte";
 
 	let { data, children } = $props();
 	let clearingExpiredSession = $state(false);
+	const shell = shellLayoutVariants();
 
 	$effect(() => {
 		return auth.session.subscribe((session) => {
@@ -50,17 +52,13 @@
 	const displayName = $derived(formatDisplayName(email));
 	const currentProject = $derived(projectStore.currentProject);
 	const workspaceStatus = $derived(projectStore.status);
-	const isPrimaryWorkspaceRoute = $derived(page.url.pathname === "/app");
 	const isProjectLibraryRoute = $derived(page.url.pathname === "/app/projects");
-	const searchPlaceholder = $derived(
-		isProjectLibraryRoute
-			? "Search library, folders, assets, and outputs"
-			: isPrimaryWorkspaceRoute
-				? "Search chats, assets, outputs, and tools"
-				: "Search projects, sessions, workflows, and tools",
+	const routeMeta = $derived(getRouteMeta(page.url.pathname));
+	const headerContext = $derived(
+		currentProject?.name ? `Inside ${currentProject.name}` : projectStore.statusMessage,
 	);
-	const assistantToggleLabel = $derived(
-		agentPanelState.isOpen ? "Hide Chat Panel" : "Show Chat Panel",
+	const statusMeta = $derived(
+		workspaceStatusTone(workspaceStatus, projectStore.statusMessage),
 	);
 
 	$effect(() => {
@@ -79,51 +77,49 @@
 			.join(" ");
 	}
 
-	function getStatusMeta(status: WorkspaceConnectionStatus) {
-		switch (status) {
-			case "ready":
+	function getRouteMeta(pathname: string) {
+		switch (pathname) {
+			case "/app":
 				return {
-					label: "Connected",
-					className:
-						"border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300",
+					title: "Overview",
+					searchPlaceholder: "Search overview, sessions, updates, and tools",
 				};
-			case "checking":
+			case "/app/chat":
 				return {
-					label: "Syncing",
-					className:
-						"border-sky-200 bg-sky-50 text-sky-700 dark:border-sky-900 dark:bg-sky-950/40 dark:text-sky-300",
+					title: "Chat",
+					searchPlaceholder: "Search chats, assets, outputs, and tools",
 				};
-			case "auth_error":
+			case "/app/projects":
 				return {
-					label: "Auth issue",
-					className:
-						"border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-300",
+					title: "Library",
+					searchPlaceholder: "Search library, folders, assets, and outputs",
 				};
-			case "backend_down":
+			case "/app/studio":
 				return {
-					label: "Backend down",
-					className:
-						"border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-300",
+					title: "Studio",
+					searchPlaceholder: "Search tools, prompts, and services",
+				};
+			case "/app/workflows":
+				return {
+					title: "Workflows",
+					searchPlaceholder: "Search workflows, sessions, and project tools",
 				};
 			default:
 				return {
-					label: "Sync failed",
-					className:
-						"border-orange-200 bg-orange-50 text-orange-700 dark:border-orange-900 dark:bg-orange-950/40 dark:text-orange-300",
+					title: "Acheulit",
+					searchPlaceholder: "Search projects, sessions, workflows, and tools",
 				};
 		}
 	}
-
-	const statusMeta = $derived(getStatusMeta(workspaceStatus));
 </script>
 
 <Sidebar.Provider>
 	<AppSidebar user={{ name: displayName, email }} />
 	<Sidebar.Inset>
-		<div class="flex h-full flex-1 overflow-hidden">
-			<div class="flex min-w-0 flex-1 flex-col overflow-hidden">
-				<header class="shrink-0 border-b bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-background/75">
-					<div class="mx-auto flex h-16 w-full max-w-[1180px] items-center gap-3 px-4 sm:h-[4.25rem] sm:px-6">
+		<div class={shell.viewport()}>
+			<div class={shell.mainColumn()}>
+				<header class={shell.header()}>
+					<div class={shell.headerInner()}>
 						<div class="flex min-w-0 items-center gap-2">
 							<Sidebar.Trigger class="-ms-1" />
 							<Separator orientation="vertical" class="me-1 data-[orientation=vertical]:h-4" />
@@ -135,14 +131,12 @@
 										</Breadcrumb.Item>
 										<Breadcrumb.Separator class="hidden sm:block" />
 										<Breadcrumb.Item>
-											<Breadcrumb.Page>
-												{currentProject?.name ?? "Acheulit home"}
-											</Breadcrumb.Page>
+											<Breadcrumb.Page>{routeMeta.title}</Breadcrumb.Page>
 										</Breadcrumb.Item>
 									</Breadcrumb.List>
 								</Breadcrumb.Root>
 								<p class="text-muted-foreground mt-1 hidden truncate text-xs md:block">
-									{projectStore.statusMessage}
+									{headerContext}
 								</p>
 							</div>
 						</div>
@@ -154,32 +148,47 @@
 							<Input
 								type="search"
 								bind:value={workspaceSearchStore.query}
-								placeholder={searchPlaceholder}
-								class="h-10 rounded-full border-border/70 bg-muted/40 pl-10 shadow-sm"
+								placeholder={routeMeta.searchPlaceholder}
+								class={shell.headerSearch()}
 							/>
 						</div>
 
 						<div class="ms-auto flex items-center gap-2">
-							<Badge variant="outline" class="hidden rounded-full px-3 py-1 text-[11px] sm:inline-flex {statusMeta.className}">
+							<Badge
+								variant="outline"
+								class={cn(
+									"hidden rounded-full px-3 py-1 text-[11px] sm:inline-flex",
+									statusMeta.badgeClass,
+								)}
+							>
 								{statusMeta.label}
 							</Badge>
 							<Button
 								variant={agentPanelState.isOpen ? "secondary" : "outline"}
 								size="sm"
-								class="gap-2 rounded-full px-3.5"
+								class={shell.headerButton()}
 								onclick={() => agentPanelState.toggle()}
 								aria-label="Toggle agent panel"
 							>
-								<Sparkles class="size-4" />
-								<span class="hidden sm:inline">{assistantToggleLabel}</span>
+								<span class="flex size-7 items-center justify-center rounded-full border border-border/70 bg-background/80 shadow-sm">
+									<Sparkles class="size-3.5" />
+								</span>
+								<span class="hidden sm:inline">Chat</span>
+								{#if agentPanelState.isOpen}
+									<ChevronRight class="size-4 text-muted-foreground" />
+								{:else}
+									<ChevronLeft class="size-4 text-muted-foreground" />
+								{/if}
 							</Button>
 						</div>
 					</div>
 				</header>
 
-				<div class="flex min-h-0 flex-1 flex-col overflow-hidden">
-					<div class="mx-auto flex h-full w-full max-w-[1180px] flex-1 flex-col px-4 pb-10 pt-6 sm:px-6">
-						{@render children()}
+				<div class={shell.content()}>
+					<div class={shell.routeViewport()}>
+						<div class={shell.routeFrame()}>
+							{@render children()}
+						</div>
 					</div>
 				</div>
 			</div>
