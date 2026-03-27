@@ -18,6 +18,7 @@
 
 	const isOpen = $derived(agentPanelState.isOpen);
 	const enabledToolCount = $derived(agentPanelState.enabledToolIds.length);
+	const totalToolCount = $derived(agentPanelState.tools.length);
 	const automatedToolUsage = $derived(agentPanelState.automatedToolUsage);
 
 	function onResizePointerDown(e: PointerEvent) {
@@ -67,7 +68,11 @@
 					<div>
 						<p class={metricLabelClass}>MCP tools</p>
 						<p class="mt-1 text-xs text-muted-foreground">
-							{enabledToolCount} enabled
+							{#if automatedToolUsage}
+								Auto — all {totalToolCount} tools
+							{:else}
+								{enabledToolCount} of {totalToolCount} enabled
+							{/if}
 						</p>
 					</div>
 					<button
@@ -84,25 +89,28 @@
 				</div>
 				{#if toolRailVisible}
 					<div class="mt-3 space-y-2">
-						<label
-							class={cn(
-								interactiveItemVariants({ tone: automatedToolUsage ? "selected" : "row", density: "compact" }),
-								"flex items-start gap-3 rounded-xl px-2.5 py-2",
-							)}
-						>
-							<input
-								type="checkbox"
-								class="mt-0.5"
-								checked={automatedToolUsage}
-								onchange={() => agentPanelState.toggleAutomatedToolUsage()}
-							/>
-							<div class="min-w-0 flex-1">
-								<p class="text-sm font-medium">Automated MCP tool use</p>
-								<p class="mt-1 text-xs text-muted-foreground">
-									When on, the agent can call the checked tools during chat replies. When off, checked tools stay available for manual runs only.
-								</p>
-							</div>
-						</label>
+						<div class="flex rounded-xl border border-[var(--shell-border-soft)] p-0.5">
+							<button
+								type="button"
+								class={cn(
+									interactiveItemVariants({ tone: automatedToolUsage ? "selected" : "row", density: "compact" }),
+									"flex-1 rounded-[10px] px-3 py-1.5 text-sm font-medium",
+								)}
+								onclick={() => agentPanelState.setAutomatedToolUsage(true)}
+							>
+								Auto
+							</button>
+							<button
+								type="button"
+								class={cn(
+									interactiveItemVariants({ tone: automatedToolUsage ? "row" : "selected", density: "compact" }),
+									"flex-1 rounded-[10px] px-3 py-1.5 text-sm font-medium",
+								)}
+								onclick={() => agentPanelState.setAutomatedToolUsage(false)}
+							>
+								Manual
+							</button>
+						</div>
 						{#if agentPanelState.toolsLoading}
 							<p class="text-xs text-muted-foreground">Loading MCP tool catalog…</p>
 						{:else if agentPanelState.toolsError}
@@ -110,30 +118,44 @@
 						{:else if agentPanelState.tools.length}
 							<div class="max-h-44 space-y-1 overflow-y-auto pr-1">
 								{#each agentPanelState.tools as tool (tool.id)}
-									<label
-										class={cn(
-											interactiveItemVariants({ tone: tool.enabled ? "selected" : "row", density: "compact" }),
-											"flex w-full items-start gap-2 rounded-xl px-2.5 py-2 text-left",
-										)}
-									>
-										<input
-											type="checkbox"
-											class="mt-0.5"
-											checked={tool.enabled}
-											onchange={() => agentPanelState.toggleTool(tool.id)}
-										/>
-										<div class="min-w-0 flex-1">
-											<div class="flex items-center gap-2">
-												<p class="truncate text-sm font-medium">{tool.name}</p>
-												<span class="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-primary">
-													{tool.server}
-												</span>
-											</div>
-											<p class="mt-1 line-clamp-2 text-xs text-muted-foreground">
-												{tool.description}
-											</p>
+									{#if automatedToolUsage}
+										<div
+											class={cn(
+												interactiveItemVariants({ tone: "row", density: "compact" }),
+												"flex w-full items-center gap-2 rounded-xl px-2.5 py-1.5",
+											)}
+										>
+											<p class="truncate text-sm font-medium">{tool.name}</p>
+											<span class="ml-auto shrink-0 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-primary">
+												{tool.server}
+											</span>
 										</div>
-									</label>
+									{:else}
+										<label
+											class={cn(
+												interactiveItemVariants({ tone: tool.enabled ? "selected" : "row", density: "compact" }),
+												"flex w-full items-start gap-2 rounded-xl px-2.5 py-2 text-left",
+											)}
+										>
+											<input
+												type="checkbox"
+												class="mt-0.5"
+												checked={tool.enabled}
+												onchange={() => agentPanelState.toggleTool(tool.id)}
+											/>
+											<div class="min-w-0 flex-1">
+												<div class="flex items-center gap-2">
+													<p class="truncate text-sm font-medium">{tool.name}</p>
+													<span class="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-primary">
+														{tool.server}
+													</span>
+												</div>
+												<p class="mt-1 line-clamp-2 text-xs text-muted-foreground">
+													{tool.description}
+												</p>
+											</div>
+										</label>
+									{/if}
 								{/each}
 							</div>
 						{:else}

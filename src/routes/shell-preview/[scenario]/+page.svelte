@@ -107,7 +107,6 @@
 			panelOpen: agentPanelState.isOpen,
 			tools: agentPanelState.tools,
 			loadedProjectId: agentPanelState.loadedProjectId,
-			activeManualToolId: agentPanelState.activeManualToolId,
 			searchQuery: workspaceSearchStore.query,
 		};
 
@@ -121,7 +120,6 @@
 		workspaceSearchStore.clear();
 		agentPanelState.open();
 		agentPanelState.setTools(previewProject.id, previewTools);
-		agentPanelState.setActiveManualTool("generate_text");
 
 		return () => {
 			projectStore.currentProject = previous.currentProject;
@@ -134,7 +132,6 @@
 			agentPanelState.isOpen = previous.panelOpen;
 			agentPanelState.tools = previous.tools;
 			agentPanelState.loadedProjectId = previous.loadedProjectId;
-			agentPanelState.activeManualToolId = previous.activeManualToolId;
 			workspaceSearchStore.query = previous.searchQuery;
 		};
 	});

@@ -16,7 +16,6 @@
 		listProjectAssets,
 		normalizeWorkspaceError,
 		mapSessionEventToConversationItem,
-		runSessionTool,
 		streamChat,
 		uploadProjectAsset,
 		type ConversationAttachment,
@@ -27,7 +26,6 @@
 	import { projectStore, type ChatMessage } from "$lib/stores/project.svelte";
 	import { cn } from "$lib/utils.js";
 	import {
-		CheckSquare,
 		ChevronDown,
 		ExternalLink,
 		MessageSquare,
@@ -68,7 +66,6 @@ const SUGGESTIONS = [
 	const shell = shellLayoutVariants();
 	let isLoading = $state(false);
 	let reconnecting = $state(false);
-	let runningManualTool = $state(false);
 	let chatError = $state<string | null>(null);
 	let workflowMode = $state<WorkflowMode>("guided");
 	let activeStep = $state<WorkflowStep>("plan");
@@ -76,7 +73,6 @@ const SUGGESTIONS = [
 	let availableAttachments = $state<ConversationAttachment[]>([]);
 	let attachmentsLoading = $state(false);
 	let composerAttachments = $state<ConversationAttachment[]>([]);
-	let manualArgumentDrafts = $state<Record<string, Record<string, string | boolean>>>({});
 
 	const isMain = $derived(variant === "main");
 	const currentProject = $derived(projectStore.currentProject);
@@ -102,10 +98,6 @@ const SUGGESTIONS = [
 	);
 	const hasAssistantMessages = $derived(
 		localMessages.some((m) => m.role === "assistant"),
-	);
-	const enabledTools = $derived(agentPanelState.tools.filter((tool) => tool.enabled));
-	const activeManualTool = $derived(
-		enabledTools.find((tool) => tool.id === agentPanelState.activeManualToolId) ?? enabledTools[0] ?? null,
 	);
 	const workspaceFrameClass = $derived(
 		cn(
@@ -343,9 +335,11 @@ const SUGGESTIONS = [
 				content,
 				token,
 				{
-					enabledTools: agentPanelState.enabledToolIds,
+					enabledTools: agentPanelState.automatedToolUsage
+						? agentPanelState.tools.map((t) => t.id)
+						: agentPanelState.enabledToolIds,
 					attachmentVersionIds: attachmentIds,
-					automatedToolUsage: agentPanelState.automatedToolUsage,
+					automatedToolUsage: true,
 				},
 				{
 				onUserEvent(event) {
@@ -447,74 +441,6 @@ const SUGGESTIONS = [
 			(attachment) => attachment.asset_version_id !== assetVersionId,
 		);
 	}
-
-	async function handleManualToolRun() {
-		const token = getAccessToken();
-		const project = currentProject;
-		let session = currentSession;
-		const tool = activeManualTool;
-		if (!token || !project || !tool) return;
-
-		if (!session) {
-			session = await projectStore.createNewSession(`Tool: ${tool.name}`, project.id, token);
-		}
-
-		runningManualTool = true;
-		chatError = null;
-		try {
-			const response = await runSessionTool(project.id, session.id, token, {
-				tool_name: tool.name,
-				arguments: buildManualArguments(tool),
-				attachment_version_ids: composerAttachments.map((attachment) => attachment.asset_version_id),
-			});
-			appendConversationItem(mapSessionEventToConversationItem(response.tool_call_event));
-			appendConversationItem(mapSessionEventToConversationItem(response.tool_result_event));
-			for (const event of response.asset_events) {
-				appendConversationItem(mapSessionEventToConversationItem(event));
-			}
-		} catch (error) {
-			chatError = normalizeWorkspaceError(error).userMessage;
-		} finally {
-			runningManualTool = false;
-		}
-	}
-
-	function buildManualArguments(tool: { id: string; inputSchema: Record<string, unknown> }) {
-		const draft = manualArgumentDrafts[tool.id] ?? {};
-		const properties = isRecord(tool.inputSchema.properties) ? tool.inputSchema.properties : {};
-		const args: Record<string, unknown> = {};
-
-		for (const [name, schemaValue] of Object.entries(properties)) {
-			if (AUTO_MANAGED_FIELDS.has(name)) continue;
-			const rawValue = draft[name];
-			if (rawValue === "" || rawValue === undefined || rawValue === null) continue;
-			const schema = isRecord(schemaValue) ? schemaValue : {};
-			const type = typeof schema.type === "string" ? schema.type : "";
-			if (type === "integer" || type === "number") {
-				args[name] = Number(rawValue);
-			} else if (type === "boolean") {
-				args[name] = Boolean(rawValue);
-			} else if (type === "array" || type === "object") {
-				args[name] = typeof rawValue === "string" ? JSON.parse(rawValue) : rawValue;
-			} else {
-				args[name] = rawValue;
-			}
-		}
-
-		return args;
-	}
-
-	function updateManualDraft(toolId: string, key: string, value: string | boolean) {
-		manualArgumentDrafts = {
-			...manualArgumentDrafts,
-			[toolId]: {
-				...(manualArgumentDrafts[toolId] ?? {}),
-				[key]: value,
-			},
-		};
-	}
-
-	const AUTO_MANAGED_FIELDS = new Set(["audio_path", "input_image_paths", "output_path", "transcript_path", "diarization_path"]);
 
 	function inferAssetType(file: File): string {
 		if (file.type.startsWith("image/")) return "image";
@@ -981,104 +907,6 @@ const SUGGESTIONS = [
 	</div>
 {/snippet}
 
-{#snippet manualToolRunner()}
-	{#if activeManualTool}
-		<div class="border-b border-[var(--shell-border-soft)] px-4 py-3">
-			<div class={surfaceVariants({ tone: "muted", radius: "block", padding: "md", emphasis: "flat" })}>
-				<div class="flex flex-wrap items-center justify-between gap-3">
-					<div>
-						<p class={metricLabelClass}>Manual tool runner</p>
-						<p class="mt-1 text-sm font-medium">Run one checked MCP tool directly inside this thread.</p>
-					</div>
-					<select
-						class="rounded-xl border border-[var(--shell-border-soft)] bg-background px-3 py-2 text-sm"
-						value={activeManualTool.id}
-						onchange={(event) =>
-							agentPanelState.setActiveManualTool((event.currentTarget as HTMLSelectElement).value)}
-					>
-						{#each enabledTools as tool (tool.id)}
-							<option value={tool.id}>{tool.server} · {tool.name}</option>
-						{/each}
-					</select>
-				</div>
-
-				<div class="mt-3 grid gap-3 md:grid-cols-2">
-					{#each Object.entries((activeManualTool.inputSchema.properties as Record<string, unknown>) ?? {}) as [name, schemaValue] (name)}
-						{@const schema = isRecord(schemaValue) ? schemaValue : {}}
-						<div class="space-y-1.5">
-							<label
-								for={`tool-field-${activeManualTool.id}-${name}`}
-								class="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground"
-							>
-								{name}
-							</label>
-							{#if AUTO_MANAGED_FIELDS.has(name)}
-								<div class="rounded-xl border border-dashed border-[var(--shell-border-soft)] bg-background px-3 py-2 text-xs text-muted-foreground">
-									Auto-managed from selected attachments or generated output paths.
-								</div>
-							{:else if schema.type === "boolean"}
-								<label class="flex items-center gap-2 rounded-xl border border-[var(--shell-border-soft)] bg-background px-3 py-2 text-sm">
-									<input
-										type="checkbox"
-										checked={Boolean(manualArgumentDrafts[activeManualTool.id]?.[name])}
-										onchange={(event) =>
-											updateManualDraft(
-												activeManualTool.id,
-												name,
-												(event.currentTarget as HTMLInputElement).checked,
-											)}
-									/>
-									Enable
-								</label>
-							{:else if schema.type === "array" || schema.type === "object"}
-								<textarea
-									id={`tool-field-${activeManualTool.id}-${name}`}
-									class="min-h-24 w-full rounded-xl border border-[var(--shell-border-soft)] bg-background px-3 py-2 text-sm"
-									placeholder={schema.type === "array" ? '["value"]' : '{"key":"value"}'}
-									value={String(manualArgumentDrafts[activeManualTool.id]?.[name] ?? "")}
-									oninput={(event) =>
-										updateManualDraft(
-											activeManualTool.id,
-											name,
-											(event.currentTarget as HTMLTextAreaElement).value,
-										)}
-								></textarea>
-							{:else}
-								<input
-									id={`tool-field-${activeManualTool.id}-${name}`}
-									class="w-full rounded-xl border border-[var(--shell-border-soft)] bg-background px-3 py-2 text-sm"
-									type={schema.type === "number" || schema.type === "integer" ? "number" : "text"}
-									placeholder={typeof schema.description === "string" ? schema.description : name}
-									value={String(manualArgumentDrafts[activeManualTool.id]?.[name] ?? "")}
-									oninput={(event) =>
-										updateManualDraft(
-											activeManualTool.id,
-											name,
-											(event.currentTarget as HTMLInputElement).value,
-										)}
-								/>
-							{/if}
-						</div>
-					{/each}
-				</div>
-
-				<div class="mt-3 flex flex-wrap items-center justify-between gap-3">
-					<div class="text-xs text-muted-foreground">
-						Using {composerAttachments.length} selected attachment{composerAttachments.length === 1 ? "" : "s"}.
-					</div>
-					<Button
-						class="rounded-xl"
-						disabled={runningManualTool || !activeManualTool}
-						onclick={handleManualToolRun}
-					>
-						<CheckSquare class="size-4" />
-						{runningManualTool ? "Running..." : "Run selected tool"}
-					</Button>
-				</div>
-			</div>
-		</div>
-	{/if}
-{/snippet}
 
 <div
 	class={workspaceFrameClass}
@@ -1191,10 +1019,6 @@ const SUGGESTIONS = [
 				{chatError}
 			</div>
 		</div>
-	{/if}
-
-	{#if enabledTools.length > 0}
-		{@render manualToolRunner()}
 	{/if}
 
 	<div class="min-h-0 flex-1 overflow-hidden">

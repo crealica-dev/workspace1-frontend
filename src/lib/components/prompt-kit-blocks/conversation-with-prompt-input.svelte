@@ -252,19 +252,21 @@
 											<p class="mt-1 text-sm font-medium">
 												{message.toolInvocation?.tool_name ?? message.toolResult?.tool_name ?? message.name ?? "Tool"}
 											</p>
-											{#if message.toolInvocation}
-												<pre class="mt-2 overflow-auto whitespace-pre-wrap break-words rounded-xl bg-background p-3 font-mono text-xs text-muted-foreground">{JSON.stringify(message.toolInvocation.arguments, null, 2)}</pre>
+											{#if message.toolInvocation && Object.keys(message.toolInvocation.arguments).length > 0}
+												<details class="mt-2">
+													<summary class="cursor-pointer select-none text-xs text-muted-foreground hover:text-foreground">Arguments</summary>
+													<pre class="mt-1 overflow-auto whitespace-pre-wrap break-words rounded-xl bg-background p-3 font-mono text-xs text-muted-foreground">{JSON.stringify(message.toolInvocation.arguments, null, 2)}</pre>
+												</details>
 											{/if}
 											{#if message.toolResult}
-												{#if message.toolResult.content}
-													<p class="mt-2 text-sm leading-6">{message.toolResult.content}</p>
-												{/if}
 												{#if message.toolResult.assets.length}
 													<div class="mt-3 space-y-2">
 														{#each message.toolResult.assets as attachment (attachment.asset_version_id)}
 															<AssetPreviewCard attachment={attachment} compact={true} />
 														{/each}
 													</div>
+												{:else if message.toolResult.content}
+													<p class="mt-2 text-sm leading-6">{message.toolResult.content}</p>
 												{/if}
 											{/if}
 										</div>

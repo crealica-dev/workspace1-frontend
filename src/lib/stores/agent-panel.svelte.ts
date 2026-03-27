@@ -6,7 +6,6 @@ class AgentPanelState {
 	toolsLoading = $state(false);
 	toolsError = $state<string | null>(null);
 	loadedProjectId = $state<string | null>(null);
-	activeManualToolId = $state<string | null>(null);
 	automatedToolUsage = $state(true);
 
 	open() {
@@ -26,9 +25,6 @@ class AgentPanelState {
 			enabled: enabled.has(tool.id) || tool.enabled,
 		}));
 		this.loadedProjectId = projectId;
-		if (!this.activeManualToolId || !this.tools.some((tool) => tool.id === this.activeManualToolId)) {
-			this.activeManualToolId = this.tools[0]?.id ?? null;
-		}
 	}
 
 	toggleTool(id: string) {
@@ -43,10 +39,6 @@ class AgentPanelState {
 
 	setToolError(message: string | null) {
 		this.toolsError = message;
-	}
-
-	setActiveManualTool(id: string | null) {
-		this.activeManualToolId = id;
 	}
 
 	setAutomatedToolUsage(enabled: boolean) {
