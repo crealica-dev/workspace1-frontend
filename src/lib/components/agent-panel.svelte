@@ -18,6 +18,7 @@
 
 	const isOpen = $derived(agentPanelState.isOpen);
 	const enabledToolCount = $derived(agentPanelState.enabledToolIds.length);
+	const automatedToolUsage = $derived(agentPanelState.automatedToolUsage);
 
 	function onResizePointerDown(e: PointerEvent) {
 		isDragging = true;
@@ -83,6 +84,25 @@
 				</div>
 				{#if toolRailVisible}
 					<div class="mt-3 space-y-2">
+						<label
+							class={cn(
+								interactiveItemVariants({ tone: automatedToolUsage ? "selected" : "row", density: "compact" }),
+								"flex items-start gap-3 rounded-xl px-2.5 py-2",
+							)}
+						>
+							<input
+								type="checkbox"
+								class="mt-0.5"
+								checked={automatedToolUsage}
+								onchange={() => agentPanelState.toggleAutomatedToolUsage()}
+							/>
+							<div class="min-w-0 flex-1">
+								<p class="text-sm font-medium">Automated MCP tool use</p>
+								<p class="mt-1 text-xs text-muted-foreground">
+									When on, the agent can call the checked tools during chat replies. When off, checked tools stay available for manual runs only.
+								</p>
+							</div>
+						</label>
 						{#if agentPanelState.toolsLoading}
 							<p class="text-xs text-muted-foreground">Loading MCP tool catalog…</p>
 						{:else if agentPanelState.toolsError}

@@ -39,6 +39,7 @@
 		Trash2,
 		WifiOff,
 	} from "@lucide/svelte";
+	import { untrack } from "svelte";
 
 	type Variant = "main" | "drawer";
 	type WorkflowMode = "guided" | "manual";
@@ -180,9 +181,15 @@ const SUGGESTIONS = [
 		const project = currentProject;
 		const token = getAccessToken();
 		let cancelled = false;
+		const alreadyLoadedForProject = untrack(
+			() => agentPanelState.loadedProjectId === project?.id && agentPanelState.tools.length > 0,
+		);
 
-		if (!project || !token || workspaceStatus !== "ready") return;
-		if (agentPanelState.loadedProjectId === project.id && agentPanelState.tools.length) return;
+		if (!project || !token || workspaceStatus !== "ready") {
+			agentPanelState.setToolLoading(false);
+			return;
+		}
+		if (alreadyLoadedForProject) return;
 
 		agentPanelState.setToolLoading(true);
 		agentPanelState.setToolError(null);
@@ -190,16 +197,15 @@ const SUGGESTIONS = [
 		void listMcpTools(project.id, token)
 			.then((tools) => {
 				if (cancelled) return;
+				agentPanelState.setToolLoading(false);
 				agentPanelState.setTools(project.id, tools);
 			})
 			.catch((error) => {
 				if (cancelled) return;
+				agentPanelState.setToolLoading(false);
 				agentPanelState.setToolError(
 					normalizeWorkspaceError(error).userMessage || "The MCP tool catalog could not be loaded.",
 				);
-			})
-			.finally(() => {
-				if (!cancelled) agentPanelState.setToolLoading(false);
 			});
 
 		return () => {
@@ -339,6 +345,7 @@ const SUGGESTIONS = [
 				{
 					enabledTools: agentPanelState.enabledToolIds,
 					attachmentVersionIds: attachmentIds,
+					automatedToolUsage: agentPanelState.automatedToolUsage,
 				},
 				{
 				onUserEvent(event) {

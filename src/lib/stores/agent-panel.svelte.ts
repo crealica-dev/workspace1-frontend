@@ -7,6 +7,7 @@ class AgentPanelState {
 	toolsError = $state<string | null>(null);
 	loadedProjectId = $state<string | null>(null);
 	activeManualToolId = $state<string | null>(null);
+	automatedToolUsage = $state(true);
 
 	open() {
 		this.isOpen = true;
@@ -46,6 +47,14 @@ class AgentPanelState {
 
 	setActiveManualTool(id: string | null) {
 		this.activeManualToolId = id;
+	}
+
+	setAutomatedToolUsage(enabled: boolean) {
+		this.automatedToolUsage = enabled;
+	}
+
+	toggleAutomatedToolUsage() {
+		this.automatedToolUsage = !this.automatedToolUsage;
 	}
 
 	get enabledToolIds(): string[] {

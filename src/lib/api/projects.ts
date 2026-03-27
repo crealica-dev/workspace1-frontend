@@ -577,6 +577,7 @@ export async function streamChat(
 	options: {
 		enabledTools?: string[];
 		attachmentVersionIds?: string[];
+		automatedToolUsage?: boolean;
 	} = {},
 	callbacks: ChatStreamCallbacks,
 ): Promise<void> {
@@ -586,6 +587,7 @@ export async function streamChat(
 			message,
 			enabled_tools: options.enabledTools ?? [],
 			attachment_version_ids: options.attachmentVersionIds ?? [],
+			automated_tool_usage: options.automatedToolUsage ?? true,
 		}),
 	});
 
