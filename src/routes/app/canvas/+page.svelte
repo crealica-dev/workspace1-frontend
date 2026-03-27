@@ -1,21 +1,8 @@
 <script lang="ts">
-	import {
-		SvelteFlow,
-		Background,
-		Controls,
-		MiniMap,
-		useSvelteFlow,
-		type Node,
-		type Edge,
-	} from '@xyflow/svelte';
-	import '@xyflow/svelte/dist/style.css';
+	import { SvelteFlowProvider, type Node, type Edge } from '@xyflow/svelte';
 	import { surfaceVariants } from '$lib/design/index.js';
-	import { nodeTypes } from '$lib/components/canvas/nodes/index';
-	import { edgeTypes } from '$lib/components/canvas/edges/index';
-	import NodePalette from '$lib/components/canvas/NodePalette.svelte';
-	import InspectorPanel from '$lib/components/canvas/InspectorPanel.svelte';
-	import CanvasToolbar from '$lib/components/canvas/CanvasToolbar.svelte';
-	import { canvasStore, type CanvasNodeType } from '$lib/stores/canvas.svelte';
+	import CanvasWorkspace from '$lib/components/canvas/CanvasWorkspace.svelte';
+	import { canvasStore } from '$lib/stores/canvas.svelte';
 	import { auth } from '$lib/auth';
 	import { projectStore } from '$lib/stores/project.svelte';
 	import {
@@ -25,8 +12,6 @@
 		runWorkflow,
 		type Workflow,
 	} from '$lib/api/projects';
-
-	const { screenToFlowPosition } = useSvelteFlow();
 
 	let isRunning = $state(false);
 	let accessToken = $state('');
@@ -41,51 +26,6 @@
 			accessToken = session?.access_token ?? '';
 		});
 	});
-
-	/* ---------- drag-and-drop from palette ---------- */
-
-	function handleDragOver(event: DragEvent) {
-		event.preventDefault();
-		if (event.dataTransfer) event.dataTransfer.dropEffect = 'move';
-	}
-
-	function handleDrop(event: DragEvent) {
-		event.preventDefault();
-		if (!event.dataTransfer) return;
-
-		const type = event.dataTransfer.getData('application/svelteflow-type') as CanvasNodeType;
-		const label = event.dataTransfer.getData('application/svelteflow-label');
-		if (!type) return;
-
-		const position = screenToFlowPosition({ x: event.clientX, y: event.clientY });
-		canvasStore.addNode(type, position, { label });
-	}
-
-	/* ---------- node selection ---------- */
-
-	function handleNodeClick({ node }: { node: Node; event: MouseEvent | TouchEvent }) {
-		canvasStore.selectedNodeId = node.id;
-	}
-
-	function handlePaneClick() {
-		canvasStore.selectedNodeId = null;
-	}
-
-	/* ---------- new connection creates status edges ---------- */
-
-	function handleConnect(connection: { source: string; target: string; sourceHandle?: string | null; targetHandle?: string | null }) {
-		const id = `e${connection.source}-${connection.target}`;
-		const edge: Edge = {
-			id,
-			source: connection.source,
-			target: connection.target,
-			sourceHandle: connection.sourceHandle ?? undefined,
-			targetHandle: connection.targetHandle ?? undefined,
-			type: 'status',
-			data: { status: 'idle' },
-		};
-		canvasStore.edges = [...canvasStore.edges, edge];
-	}
 
 	/* ---------- toolbar actions ---------- */
 
@@ -166,44 +106,15 @@
 	<title>Canvas - Acheulit</title>
 </svelte:head>
 
-<div class="flex h-full gap-0 overflow-hidden">
-	<!-- left: palette -->
-	<NodePalette />
-
-	<!-- center: canvas -->
-	<div class="relative flex-1">
-		<div class="absolute inset-0">
-			<SvelteFlow
-				bind:nodes={canvasStore.nodes}
-				bind:edges={canvasStore.edges}
-				{nodeTypes}
-				{edgeTypes}
-				onconnect={handleConnect}
-				onnodeclick={handleNodeClick}
-				onpaneclick={handlePaneClick}
-				ondragover={handleDragOver}
-				ondrop={handleDrop}
-				fitView
-				defaultEdgeOptions={{ type: 'status', data: { status: 'idle' } }}
-				class="bg-background"
-			>
-				<Background />
-				<Controls position="bottom-left" />
-				<MiniMap position="bottom-right" class="rounded-lg border border-border" />
-				<CanvasToolbar
-					onSave={handleSave}
-					onLoad={handleLoad}
-					onRun={handleRun}
-					onStop={handleStop}
-					{isRunning}
-				/>
-			</SvelteFlow>
-		</div>
-	</div>
-
-	<!-- right: inspector -->
-	<InspectorPanel />
-</div>
+<SvelteFlowProvider>
+	<CanvasWorkspace
+		onSave={handleSave}
+		onLoad={handleLoad}
+		onRun={handleRun}
+		onStop={handleStop}
+		{isRunning}
+	/>
+</SvelteFlowProvider>
 
 {#if showLoadDialog}
 	<!-- svelte-ignore a11y_click_events_have_key_events -->
