@@ -1,6 +1,10 @@
 import { env } from '$env/dynamic/public';
 
-export const apiBaseUrl = env.PUBLIC_API_BASE_URL || 'http://127.0.0.1:8000';
+function _defaultApiBaseUrl(): string {
+	if (typeof window === 'undefined') return 'http://127.0.0.1:8000';
+	return `http://${window.location.hostname}:8000`;
+}
+export const apiBaseUrl = env.PUBLIC_API_BASE_URL || _defaultApiBaseUrl();
 export const supabaseUrl = env.PUBLIC_SUPABASE_URL || '';
 export const supabaseAnonKey = env.PUBLIC_SUPABASE_ANON_KEY || '';
 export const hasSupabaseConfig = Boolean(supabaseUrl && supabaseAnonKey);
