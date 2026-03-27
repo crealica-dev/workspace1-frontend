@@ -20,6 +20,7 @@
 	import LibraryPage from "../../app/library/+page.svelte";
 	import StudioPage from "../../app/studio/+page.svelte";
 	import WorkflowsPage from "../../app/workflows/+page.svelte";
+	import CanvasPage from "../../app/canvas/+page.svelte";
 
 	let { data } = $props();
 	const scenario = $derived.by(() => data.scenario as ShellPreviewScenario);
@@ -163,6 +164,11 @@
 					title: "Workflows",
 					searchPlaceholder: "Search workflows, sessions, and project tools",
 				};
+			case "canvas":
+				return {
+					title: "Canvas: SvelteFlow",
+					searchPlaceholder: "Search canvas nodes and connections",
+				};
 			case "billing":
 				return {
 					title: "Billing",
@@ -253,6 +259,8 @@
 								<StudioPage />
 							{:else if scenario === "help"}
 								<HelpPage />
+							{:else if scenario === "canvas"}
+								<CanvasPage />
 							{:else}
 								<WorkflowsPage />
 							{/if}

@@ -6,6 +6,7 @@ export const shellPreviewScenarios = [
 	"workflows",
 	"billing",
 	"help",
+	"canvas",
 ] as const;
 
 export type ShellPreviewScenario = (typeof shellPreviewScenarios)[number];

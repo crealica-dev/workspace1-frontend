@@ -7,6 +7,7 @@
 	import LayoutDashboardIcon from "@lucide/svelte/icons/layout-dashboard";
 	import MessageSquareIcon from "@lucide/svelte/icons/message-square";
 	import WorkflowIcon from "@lucide/svelte/icons/workflow";
+	import NetworkIcon from "@lucide/svelte/icons/network";
 
 	const data = {
 		navMain: [
@@ -39,6 +40,11 @@
 				title: "Workflows",
 				url: "/app/workflows",
 				icon: WorkflowIcon,
+			},
+			{
+				title: "Canvas",
+				url: "/app/canvas",
+				icon: NetworkIcon,
 			},
 			{
 				title: "Billing",

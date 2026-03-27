@@ -100,6 +100,11 @@
 					title: "Workflows",
 					searchPlaceholder: "Search workflows, sessions, and project tools",
 				};
+			case "/app/canvas":
+				return {
+					title: "Canvas: SvelteFlow",
+					searchPlaceholder: "Search canvas nodes and connections",
+				};
 			case "/app/billing":
 				return {
 					title: "Billing",

@@ -94,7 +94,7 @@
 								type="button"
 								class={cn(
 									interactiveItemVariants({ tone: automatedToolUsage ? "selected" : "row", density: "compact" }),
-									"flex-1 rounded-[10px] px-3 py-1.5 text-sm font-medium",
+									"flex-1 rounded-lg px-3 py-1.5 text-sm font-medium",
 								)}
 								onclick={() => agentPanelState.setAutomatedToolUsage(true)}
 							>
@@ -104,7 +104,7 @@
 								type="button"
 								class={cn(
 									interactiveItemVariants({ tone: automatedToolUsage ? "row" : "selected", density: "compact" }),
-									"flex-1 rounded-[10px] px-3 py-1.5 text-sm font-medium",
+									"flex-1 rounded-lg px-3 py-1.5 text-sm font-medium",
 								)}
 								onclick={() => agentPanelState.setAutomatedToolUsage(false)}
 							>

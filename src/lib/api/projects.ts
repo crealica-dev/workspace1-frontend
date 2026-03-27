@@ -721,3 +721,107 @@ export function mapSessionEventToConversationItem(event: SessionEvent): Conversa
 		createdAt: event.created_at,
 	};
 }
+
+/* ------------------------------------------------------------------ */
+/*  Workflows                                                         */
+/* ------------------------------------------------------------------ */
+
+export type Workflow = {
+	id: string;
+	project_id: string;
+	owner_user_id: string;
+	name: string;
+	description: string | null;
+	version: number;
+	nodes: Record<string, any>[];
+	edges: Record<string, any>[];
+	variables: Record<string, any>[];
+	metadata: Record<string, any>;
+	created_at: string | null;
+	updated_at: string | null;
+};
+
+export type WorkflowCreate = {
+	name: string;
+	description?: string | null;
+	nodes?: Record<string, any>[];
+	edges?: Record<string, any>[];
+	variables?: Record<string, any>[];
+	metadata?: Record<string, any>;
+};
+
+export type WorkflowUpdate = Partial<WorkflowCreate>;
+
+export type WorkflowRunResult = {
+	session_id: string;
+	status: string;
+};
+
+export async function listWorkflows(
+	projectId: string,
+	token: string,
+): Promise<Workflow[]> {
+	const res = await fetchWithAuth(`/projects/${projectId}/workflows`, token);
+	return res.json();
+}
+
+export async function getWorkflow(
+	projectId: string,
+	workflowId: string,
+	token: string,
+): Promise<Workflow> {
+	const res = await fetchWithAuth(`/projects/${projectId}/workflows/${workflowId}`, token);
+	return res.json();
+}
+
+export async function createWorkflow(
+	projectId: string,
+	token: string,
+	data: WorkflowCreate,
+): Promise<Workflow> {
+	const res = await fetchWithAuth(`/projects/${projectId}/workflows`, token, {
+		method: 'POST',
+		body: JSON.stringify(data),
+	});
+	return res.json();
+}
+
+export async function updateWorkflow(
+	projectId: string,
+	workflowId: string,
+	token: string,
+	data: WorkflowUpdate,
+): Promise<Workflow> {
+	const res = await fetchWithAuth(`/projects/${projectId}/workflows/${workflowId}`, token, {
+		method: 'PATCH',
+		body: JSON.stringify(data),
+	});
+	return res.json();
+}
+
+export async function deleteWorkflow(
+	projectId: string,
+	workflowId: string,
+	token: string,
+): Promise<void> {
+	await fetchWithAuth(`/projects/${projectId}/workflows/${workflowId}`, token, {
+		method: 'DELETE',
+	});
+}
+
+export async function runWorkflow(
+	projectId: string,
+	workflowId: string,
+	token: string,
+	variableOverrides: Record<string, any> = {},
+): Promise<WorkflowRunResult> {
+	const res = await fetchWithAuth(
+		`/projects/${projectId}/workflows/${workflowId}/run`,
+		token,
+		{
+			method: 'POST',
+			body: JSON.stringify({ variable_overrides: variableOverrides }),
+		},
+	);
+	return res.json();
+}
