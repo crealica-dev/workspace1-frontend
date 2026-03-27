@@ -1,0 +1,38 @@
+Loading svelte-check in workspace: /home/mo/workspace1/frontend
+Getting Svelte diagnostics...
+
+/home/mo/workspace1/frontend/src/lib/components/prompt-kit/chat-container/chat-container-root.svelte:24:42
+Warn: This reference only captures the initial value of `resize`. Did you mean to reference it inside a closure instead?
+https://svelte.dev/e/state_referenced_locally (svelte)
+
+	const context = setChatContainerContext(resize, initial);
+
+/home/mo/workspace1/frontend/src/lib/components/prompt-kit/chat-container/chat-container-root.svelte:24:50
+Warn: This reference only captures the initial value of `initial`. Did you mean to reference it inside a closure instead?
+https://svelte.dev/e/state_referenced_locally (svelte)
+
+	const context = setChatContainerContext(resize, initial);
+
+/home/mo/workspace1/frontend/src/lib/components/prompt-kit/message/MessageContent.svelte:22:3
+Warn: This reference only captures the initial value of `className`. Did you mean to reference it inside a closure instead?
+https://svelte.dev/e/state_referenced_locally (svelte)
+		"text-foreground bg-secondary prose rounded-lg p-2 break-words whitespace-normal",
+		className
+	);
+
+/home/mo/workspace1/frontend/src/routes/app/help/+page.svelte:25:8
+Warn: '#' is not a valid href attribute
+https://svelte.dev/e/a11y_invalid_attribute (svelte)
+				</p>
+				<a href="#" class="text-sm font-medium text-primary hover:underline">Read guide →</a>
+			</div>
+
+/home/mo/workspace1/frontend/src/routes/app/help/+page.svelte:32:8
+Warn: '#' is not a valid href attribute
+https://svelte.dev/e/a11y_invalid_attribute (svelte)
+				</p>
+				<a href="#" class="text-sm font-medium text-primary hover:underline">Read guide →</a>
+			</div>
+
+====================================
+svelte-check found 0 errors and 5 warnings in 3 files
