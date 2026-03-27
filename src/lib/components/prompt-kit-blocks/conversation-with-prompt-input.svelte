@@ -4,6 +4,7 @@
 		ChatContainerContent,
 		ChatContainerRoot,
 	} from "$lib/components/prompt-kit/chat-container";
+	import AssetPreviewCard from "$lib/components/asset-preview-card.svelte";
 	import {
 		Message,
 		MessageContent,
@@ -18,6 +19,7 @@
 	} from "$lib/components/prompt-kit/prompt-input";
 	import { ScrollButton, setScrollContext } from "$lib/components/prompt-kit/scroll-button";
 	import { Button } from "$lib/components/ui/button/index.js";
+	import type { ConversationAttachment, ConversationItem } from "$lib/api/projects";
 	import { cn } from "$lib/utils";
 	import ArrowUpIcon from "@lucide/svelte/icons/arrow-up";
 	import CameraIcon from "@lucide/svelte/icons/camera";
@@ -39,12 +41,6 @@
 	import CircleUserIcon from "@lucide/svelte/icons/circle-user";
 	import type { Snippet } from "svelte";
 
-	type ChatMessage = {
-		id: string | number;
-		role: string;
-		content: string;
-	};
-
 	type PromptDraft = {
 		id: string;
 		text: string;
@@ -53,14 +49,20 @@
 	type ConversationVariant = "main" | "side-panel";
 
 	type Props = {
-		messages?: ChatMessage[];
+		messages?: ConversationItem[];
 		isLoading?: boolean;
-		onSend?: (content: string) => void;
+		onSend?: (content: string, attachments: ConversationAttachment[]) => void;
 		showMessages?: boolean;
 		disabled?: boolean;
 		disabledMessage?: string;
 		placeholder?: string;
 		queuedDraft?: PromptDraft | null;
+		attachments?: ConversationAttachment[];
+		availableAttachments?: ConversationAttachment[];
+		attachmentsLoading?: boolean;
+		onAttachFiles?: (files: File[]) => void | Promise<void>;
+		onToggleAttachment?: (attachment: ConversationAttachment) => void;
+		onRemoveAttachment?: (attachmentVersionId: string) => void;
 		afterInput?: Snippet;
 		emptyState?: Snippet;
 		variant?: ConversationVariant;
@@ -76,6 +78,12 @@
 		disabledMessage = '',
 		placeholder = 'Message agent...',
 		queuedDraft = null,
+		attachments = [],
+		availableAttachments = [],
+		attachmentsLoading = false,
+		onAttachFiles,
+		onToggleAttachment,
+		onRemoveAttachment,
 		afterInput,
 		emptyState,
 		variant = "main",
@@ -105,6 +113,7 @@
 	let containerRef = $state<HTMLDivElement | null>(null);
 	let attachMenuOpen = $state(false);
 	let attachMenuRef = $state<HTMLDivElement | null>(null);
+	let fileInputRef = $state<HTMLInputElement | null>(null);
 	let lastQueuedDraftId = $state<string | null>(null);
 
 	watch(
@@ -152,9 +161,10 @@
 		if (disabled) return;
 		if (!prompt.trim()) return;
 		if (onSend) {
-			onSend(prompt.trim());
+			onSend(prompt.trim(), attachments);
 		}
 		prompt = "";
+		attachMenuOpen = false;
 	}
 
 	function handleCopy(content: string) {
@@ -177,15 +187,20 @@
 		isRecording = !isRecording;
 	}
 
+	function handleFilesSelected(event: Event) {
+		const input = event.currentTarget as HTMLInputElement;
+		const files = Array.from(input.files ?? []);
+		input.value = "";
+		if (!files.length || !onAttachFiles) return;
+		void onAttachFiles(files);
+	}
+
 	async function openLibraryImport() {
-		attachMenuOpen = false;
+		attachMenuOpen = !attachMenuOpen;
 
-		if (typeof window !== "undefined" && window.location.pathname === "/app/library") {
-			window.location.hash = "library";
-			return;
+		if (!availableAttachments.length && typeof window !== "undefined" && window.location.pathname !== "/app/library") {
+			await goto("/app/library#library");
 		}
-
-		await goto("/app/library#library");
 	}
 
 	function queueImportPrompt(source: string) {
@@ -216,24 +231,77 @@
 						{/if}
 						{#each messages as message, index (message.id)}
 							{@const isAssistant = message.role === "assistant"}
+							{@const isTool = message.eventType === "tool_call" || message.eventType === "tool_result"}
+							{@const isAssetOnly = message.eventType === "asset"}
 							{@const isLastMessage = index === messages.length - 1}
 							<Message
 								class={cn(
 								"mx-auto flex w-full max-w-full flex-col gap-2 px-0",
-									isAssistant ? "items-start" : "items-end"
+									isAssistant || isTool || isAssetOnly ? "items-start" : "items-end"
 								)}
 							>
-								{#if isAssistant}
+								{#if isTool}
+									<div class="group flex w-full gap-3">
+										<div class="mt-1 flex size-7 shrink-0 items-center justify-center rounded-full bg-primary/10">
+											<BotIcon class="size-4 text-primary" />
+										</div>
+										<div class="min-w-0 flex-1 rounded-2xl border border-[var(--shell-border-soft)] bg-[var(--surface-muted)] p-3">
+											<p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+												{message.eventType === "tool_call" ? "Tool call" : "Tool result"}
+											</p>
+											<p class="mt-1 text-sm font-medium">
+												{message.toolInvocation?.tool_name ?? message.toolResult?.tool_name ?? message.name ?? "Tool"}
+											</p>
+											{#if message.toolInvocation}
+												<pre class="mt-2 overflow-auto whitespace-pre-wrap break-words rounded-xl bg-background p-3 font-mono text-xs text-muted-foreground">{JSON.stringify(message.toolInvocation.arguments, null, 2)}</pre>
+											{/if}
+											{#if message.toolResult}
+												{#if message.toolResult.content}
+													<p class="mt-2 text-sm leading-6">{message.toolResult.content}</p>
+												{/if}
+												{#if message.toolResult.assets.length}
+													<div class="mt-3 space-y-2">
+														{#each message.toolResult.assets as attachment (attachment.asset_version_id)}
+															<AssetPreviewCard attachment={attachment} compact={true} />
+														{/each}
+													</div>
+												{/if}
+											{/if}
+										</div>
+									</div>
+								{:else if isAssetOnly && message.preview}
+									<div class="group flex w-full gap-3">
+										<div class="mt-1 flex size-7 shrink-0 items-center justify-center rounded-full bg-primary/10">
+											{#if message.role === "user"}
+												<CircleUserIcon class="size-4 text-primary" />
+											{:else}
+												<BotIcon class="size-4 text-primary" />
+											{/if}
+										</div>
+										<div class="min-w-0 flex-1">
+											<AssetPreviewCard attachment={message.preview} compact={true} />
+										</div>
+									</div>
+								{:else if isAssistant}
 								<div class="group flex w-full gap-3">
 									<div class="mt-1 flex size-7 shrink-0 items-center justify-center rounded-full bg-primary/10">
 										<BotIcon class="size-4 text-primary" />
 									</div>
 									<div class="min-w-0 flex-1 flex flex-col gap-0">
-										<MessageContent
-											class="text-foreground prose w-full flex-1 rounded-lg bg-transparent p-0"
-											markdown={true}
-											content={message.content}
-										></MessageContent>
+										{#if message.content}
+											<MessageContent
+												class="text-foreground prose w-full flex-1 rounded-lg bg-transparent p-0"
+												markdown={true}
+												content={message.content}
+											></MessageContent>
+										{/if}
+										{#if message.attachments.length}
+											<div class="mt-3 space-y-2">
+												{#each message.attachments as attachment (attachment.asset_version_id)}
+													<AssetPreviewCard attachment={attachment} compact={true} />
+												{/each}
+											</div>
+										{/if}
 										<MessageActions
 											class={cn(
 												"-ml-2.5 flex gap-0 opacity-0 transition-opacity duration-150 group-hover:opacity-100",
@@ -298,11 +366,22 @@
 								{:else}
 									<div class="group flex w-full flex-col items-end gap-1">
 										<div class="flex items-start gap-3 max-w-[85%] sm:max-w-[75%]">
-											<MessageContent
-												class="bg-muted text-primary flex-1 rounded-3xl px-5 py-2.5"
-											>
-												{message.content}
-											</MessageContent>
+											<div class="flex-1 space-y-2">
+												{#if message.content}
+													<MessageContent
+														class="bg-muted text-primary flex-1 rounded-3xl px-5 py-2.5"
+													>
+														{message.content}
+													</MessageContent>
+												{/if}
+												{#if message.attachments.length}
+													<div class="space-y-2">
+														{#each message.attachments as attachment (attachment.asset_version_id)}
+															<AssetPreviewCard attachment={attachment} compact={true} />
+														{/each}
+													</div>
+												{/if}
+											</div>
 											<div class="mt-1 flex size-7 shrink-0 items-center justify-center rounded-full bg-muted">
 												<CircleUserIcon class="size-4 text-muted-foreground" />
 											</div>
@@ -418,7 +497,7 @@
 						<div class="flex items-center gap-1.5">
 							<div bind:this={attachMenuRef} class="relative">
 								{#if attachMenuOpen}
-									<div class="absolute bottom-11 left-0 z-20 w-56 rounded-xl border border-[var(--shell-border-soft)] bg-background p-1 shadow-lg">
+									<div class="absolute bottom-11 left-0 z-20 w-72 rounded-xl border border-[var(--shell-border-soft)] bg-background p-1 shadow-lg">
 										<button
 											type="button"
 											class="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm text-foreground transition-colors hover:bg-[var(--surface-muted)]"
@@ -432,10 +511,63 @@
 											type="button"
 											class="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm text-foreground transition-colors hover:bg-[var(--surface-muted)]"
 											disabled={disabled}
+											onclick={() => fileInputRef?.click()}
 										>
 											<ImageIcon class="size-4 text-muted-foreground" />
-											Upload image
+											Upload files
 										</button>
+										<input
+											bind:this={fileInputRef}
+											type="file"
+											multiple
+											class="hidden"
+											onchange={handleFilesSelected}
+										/>
+										<div class="my-1 h-px bg-[var(--shell-border-soft)]"></div>
+										<div class="max-h-56 overflow-y-auto px-1 py-1">
+											<p class="px-1.5 py-1 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Attach from project</p>
+											{#if attachments.length}
+												<div class="mb-2 flex flex-wrap gap-1 px-1.5 py-1">
+													{#each attachments as attachment (attachment.asset_version_id)}
+														<button
+															type="button"
+															class="inline-flex items-center gap-1 rounded-full border border-[var(--shell-border-soft)] bg-[var(--surface-muted)] px-2 py-1 text-[11px]"
+															onclick={() => onRemoveAttachment?.(attachment.asset_version_id)}
+														>
+															<span class="max-w-28 truncate">{attachment.display_name}</span>
+															<XIcon class="size-3" />
+														</button>
+													{/each}
+												</div>
+											{/if}
+											{#if attachmentsLoading}
+												<p class="px-1.5 py-2 text-xs text-muted-foreground">Loading assets…</p>
+											{:else if availableAttachments.length}
+												<div class="space-y-1">
+													{#each availableAttachments as attachment (attachment.asset_version_id)}
+														<button
+															type="button"
+															class="flex w-full items-center justify-between gap-3 rounded-lg px-2.5 py-2 text-left text-sm transition-colors hover:bg-[var(--surface-muted)]"
+															onclick={() => onToggleAttachment?.(attachment)}
+														>
+															<div class="min-w-0">
+																<p class="truncate">{attachment.display_name}</p>
+																<p class="truncate text-[11px] text-muted-foreground">
+																	{attachment.mime_type ?? attachment.asset_type}
+																</p>
+															</div>
+															{#if attachments.some((item) => item.asset_version_id === attachment.asset_version_id)}
+																<XIcon class="size-3.5 text-muted-foreground" />
+															{/if}
+														</button>
+													{/each}
+												</div>
+											{:else}
+												<p class="px-1.5 py-2 text-xs text-muted-foreground">
+													Open the library or upload files to attach them here.
+												</p>
+											{/if}
+										</div>
 										<div class="my-1 h-px bg-[var(--shell-border-soft)]"></div>
 										<p class="px-2.5 py-1.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Import from</p>
 										<button

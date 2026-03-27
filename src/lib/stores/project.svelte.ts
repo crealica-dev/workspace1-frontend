@@ -10,19 +10,16 @@ import {
 	deleteProject as deleteProjectApi,
 	listSessionEvents,
 	getConnectionStatusFromError,
+	mapSessionEventToConversationItem,
 	normalizeWorkspaceError,
 	type Project,
 	type ChatSession,
-	type SessionEvent,
+	type ConversationItem,
 	type WorkspaceApiErrorDetails,
 	type WorkspaceConnectionStatus,
 } from '$lib/api/projects';
 
-export type ChatMessage = {
-	id: string;
-	role: 'user' | 'assistant';
-	content: string;
-};
+export type ChatMessage = ConversationItem;
 
 class ProjectStore {
 	projects = $state<Project[]>([]);
@@ -150,15 +147,15 @@ class ProjectStore {
 		accessToken: string,
 	): Promise<ChatMessage[]> {
 		try {
-			const events: SessionEvent[] = await listSessionEvents(projectId, sessionId, accessToken);
+			const events = await listSessionEvents(projectId, sessionId, accessToken);
 			this.setReady('Acheulit is connected and ready.');
 			return events
-				.filter((e) => e.role === 'user' || e.role === 'assistant')
-				.map((e) => ({
-					id: e.id,
-					role: e.role as 'user' | 'assistant',
-					content: e.content ?? '',
-				}));
+				.filter((event) =>
+					['user_message', 'assistant_message', 'tool_call', 'tool_result', 'asset'].includes(
+						event.event_type,
+					),
+				)
+				.map(mapSessionEventToConversationItem);
 		} catch (error) {
 			this.reportRuntimeError(error, 'The session history could not be loaded.');
 			throw error;

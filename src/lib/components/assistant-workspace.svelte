@@ -12,13 +12,22 @@
 		workspaceStatusTone,
 	} from "$lib/design/index.js";
 	import {
+		listMcpTools,
+		listProjectAssets,
 		normalizeWorkspaceError,
+		mapSessionEventToConversationItem,
+		runSessionTool,
 		streamChat,
+		uploadProjectAsset,
+		type ConversationAttachment,
+		type ProjectAsset,
 	} from "$lib/api/projects";
 	import { assistantIntentState } from "$lib/stores/assistant-intent.svelte";
+	import { agentPanelState } from "$lib/stores/agent-panel.svelte";
 	import { projectStore, type ChatMessage } from "$lib/stores/project.svelte";
 	import { cn } from "$lib/utils.js";
 	import {
+		CheckSquare,
 		ChevronDown,
 		ExternalLink,
 		MessageSquare,
@@ -58,10 +67,15 @@ const SUGGESTIONS = [
 	const shell = shellLayoutVariants();
 	let isLoading = $state(false);
 	let reconnecting = $state(false);
+	let runningManualTool = $state(false);
 	let chatError = $state<string | null>(null);
 	let workflowMode = $state<WorkflowMode>("guided");
 	let activeStep = $state<WorkflowStep>("plan");
 	let outputExpanded = $state(false);
+	let availableAttachments = $state<ConversationAttachment[]>([]);
+	let attachmentsLoading = $state(false);
+	let composerAttachments = $state<ConversationAttachment[]>([]);
+	let manualArgumentDrafts = $state<Record<string, Record<string, string | boolean>>>({});
 
 	const isMain = $derived(variant === "main");
 	const currentProject = $derived(projectStore.currentProject);
@@ -83,10 +97,14 @@ const SUGGESTIONS = [
 	const queuedDraft = $derived(assistantIntentState.draft);
 	const drawerSuggestions = $derived(SUGGESTIONS.slice(0, 3));
 	const lastAssistantMessage = $derived(
-		[...localMessages].reverse().find((m) => m.role === "assistant") ?? null,
+		[...localMessages].reverse().find((m) => m.role === "assistant" && m.content) ?? null,
 	);
 	const hasAssistantMessages = $derived(
 		localMessages.some((m) => m.role === "assistant"),
+	);
+	const enabledTools = $derived(agentPanelState.tools.filter((tool) => tool.enabled));
+	const activeManualTool = $derived(
+		enabledTools.find((tool) => tool.id === agentPanelState.activeManualToolId) ?? enabledTools[0] ?? null,
 	);
 	const workspaceFrameClass = $derived(
 		cn(
@@ -158,6 +176,69 @@ const SUGGESTIONS = [
 		};
 	});
 
+	$effect(() => {
+		const project = currentProject;
+		const token = getAccessToken();
+		let cancelled = false;
+
+		if (!project || !token || workspaceStatus !== "ready") return;
+		if (agentPanelState.loadedProjectId === project.id && agentPanelState.tools.length) return;
+
+		agentPanelState.setToolLoading(true);
+		agentPanelState.setToolError(null);
+
+		void listMcpTools(project.id, token)
+			.then((tools) => {
+				if (cancelled) return;
+				agentPanelState.setTools(project.id, tools);
+			})
+			.catch((error) => {
+				if (cancelled) return;
+				agentPanelState.setToolError(
+					normalizeWorkspaceError(error).userMessage || "The MCP tool catalog could not be loaded.",
+				);
+			})
+			.finally(() => {
+				if (!cancelled) agentPanelState.setToolLoading(false);
+			});
+
+		return () => {
+			cancelled = true;
+		};
+	});
+
+	$effect(() => {
+		const project = currentProject;
+		const token = getAccessToken();
+		let cancelled = false;
+
+		if (!project || !token || workspaceStatus !== "ready") {
+			availableAttachments = [];
+			composerAttachments = [];
+			return;
+		}
+
+		attachmentsLoading = true;
+		void listProjectAssets(project.id, token)
+			.then((assets) => {
+				if (cancelled) return;
+				availableAttachments = assets
+					.map((asset) => projectAssetToAttachment(asset))
+					.filter((item): item is ConversationAttachment => !!item);
+			})
+			.catch(() => {
+				if (cancelled) return;
+				availableAttachments = [];
+			})
+			.finally(() => {
+				if (!cancelled) attachmentsLoading = false;
+			});
+
+		return () => {
+			cancelled = true;
+		};
+	});
+
 	async function handleReconnect() {
 		const token = getAccessToken();
 		if (!token || reconnecting) return;
@@ -216,7 +297,7 @@ const SUGGESTIONS = [
 		}
 	}
 
-	async function handleSend(content: string) {
+	async function handleSend(content: string, attachments: ConversationAttachment[] = []) {
 		if (!canStartChats) {
 			chatError = statusMeta.description;
 			return;
@@ -241,19 +322,43 @@ const SUGGESTIONS = [
 
 			const userMessageId = `local-${Date.now()}`;
 			const assistantMessageId = `streaming-${Date.now()}`;
+			const attachmentIds = attachments.map((attachment) => attachment.asset_version_id);
 
-			localMessages = [...localMessages, { id: userMessageId, role: "user", content }];
+			localMessages = [
+				...localMessages,
+				createLocalMessage(userMessageId, "user", content, attachments),
+			];
+			composerAttachments = [];
 			isLoading = true;
 
-			await streamChat(project.id, session.id, content, token, {
-				onUserEvent(eventId) {
+			await streamChat(
+				project.id,
+				session.id,
+				content,
+				token,
+				{
+					enabledTools: agentPanelState.enabledToolIds,
+					attachmentVersionIds: attachmentIds,
+				},
+				{
+				onUserEvent(event) {
+					const actual = mapSessionEventToConversationItem(event);
 					localMessages = localMessages.map((message) =>
-						message.id === userMessageId ? { ...message, id: eventId } : message,
+						message.id === userMessageId ? actual : message,
 					);
 					localMessages = [
 						...localMessages,
-						{ id: assistantMessageId, role: "assistant", content: "" },
+						createLocalMessage(assistantMessageId, "assistant", ""),
 					];
+				},
+				onAsset(event) {
+					appendConversationItem(mapSessionEventToConversationItem(event));
+				},
+				onToolCall(event) {
+					appendConversationItem(mapSessionEventToConversationItem(event));
+				},
+				onToolResult(event) {
+					appendConversationItem(mapSessionEventToConversationItem(event));
 				},
 				onChunk(text) {
 					localMessages = localMessages.map((message) =>
@@ -262,23 +367,27 @@ const SUGGESTIONS = [
 							: message,
 					);
 				},
-				onDone(eventId) {
+				onDone(event, fullText) {
+					const actual = mapSessionEventToConversationItem(event);
 					localMessages = localMessages.map((message) =>
-						message.id === assistantMessageId ? { ...message, id: eventId } : message,
+						message.id === assistantMessageId
+							? { ...actual, content: fullText || actual.content }
+							: message,
 					);
 					chatError = null;
 					isLoading = false;
 				},
 				onError(message) {
-					localMessages = localMessages.map((message) =>
-						message.id === assistantMessageId
-							? { ...message, content: `Request failed: ${message}` }
-							: message,
+					localMessages = localMessages.map((item) =>
+						item.id === assistantMessageId
+							? { ...item, content: `Request failed: ${message}` }
+							: item,
 					);
 					chatError = message;
 					isLoading = false;
 				},
-			});
+			},
+			);
 		} catch (error) {
 			const normalized = normalizeWorkspaceError(error);
 			const failureText =
@@ -290,15 +399,204 @@ const SUGGESTIONS = [
 
 			localMessages = [
 				...localMessages,
-				{
-					id: assistantMessageId,
-					role: "assistant",
-					content: `Request failed: ${failureText}`,
-				},
+				createLocalMessage(assistantMessageId, "assistant", `Request failed: ${failureText}`),
 			];
 			chatError = failureText;
 			isLoading = false;
 		}
+	}
+
+	async function handleAttachFiles(files: File[]) {
+		const token = getAccessToken();
+		const project = currentProject;
+		if (!token || !project || !files.length) return;
+
+		const uploaded: ConversationAttachment[] = [];
+		for (const file of files) {
+			const response = await uploadProjectAsset(project.id, file, token, {
+				displayName: file.name,
+				assetType: inferAssetType(file),
+				source: "chat",
+			});
+			const attachment = projectAssetToAttachment(response.asset, response.asset_version.id);
+			if (attachment) uploaded.push(attachment);
+		}
+		availableAttachments = [...uploaded, ...availableAttachments];
+		composerAttachments = [...composerAttachments, ...uploaded];
+	}
+
+	function toggleComposerAttachment(attachment: ConversationAttachment) {
+		if (composerAttachments.some((item) => item.asset_version_id === attachment.asset_version_id)) {
+			composerAttachments = composerAttachments.filter(
+				(item) => item.asset_version_id !== attachment.asset_version_id,
+			);
+			return;
+		}
+		composerAttachments = [...composerAttachments, attachment];
+	}
+
+	function removeComposerAttachment(assetVersionId: string) {
+		composerAttachments = composerAttachments.filter(
+			(attachment) => attachment.asset_version_id !== assetVersionId,
+		);
+	}
+
+	async function handleManualToolRun() {
+		const token = getAccessToken();
+		const project = currentProject;
+		let session = currentSession;
+		const tool = activeManualTool;
+		if (!token || !project || !tool) return;
+
+		if (!session) {
+			session = await projectStore.createNewSession(`Tool: ${tool.name}`, project.id, token);
+		}
+
+		runningManualTool = true;
+		chatError = null;
+		try {
+			const response = await runSessionTool(project.id, session.id, token, {
+				tool_name: tool.name,
+				arguments: buildManualArguments(tool),
+				attachment_version_ids: composerAttachments.map((attachment) => attachment.asset_version_id),
+			});
+			appendConversationItem(mapSessionEventToConversationItem(response.tool_call_event));
+			appendConversationItem(mapSessionEventToConversationItem(response.tool_result_event));
+			for (const event of response.asset_events) {
+				appendConversationItem(mapSessionEventToConversationItem(event));
+			}
+		} catch (error) {
+			chatError = normalizeWorkspaceError(error).userMessage;
+		} finally {
+			runningManualTool = false;
+		}
+	}
+
+	function buildManualArguments(tool: { id: string; inputSchema: Record<string, unknown> }) {
+		const draft = manualArgumentDrafts[tool.id] ?? {};
+		const properties = isRecord(tool.inputSchema.properties) ? tool.inputSchema.properties : {};
+		const args: Record<string, unknown> = {};
+
+		for (const [name, schemaValue] of Object.entries(properties)) {
+			if (AUTO_MANAGED_FIELDS.has(name)) continue;
+			const rawValue = draft[name];
+			if (rawValue === "" || rawValue === undefined || rawValue === null) continue;
+			const schema = isRecord(schemaValue) ? schemaValue : {};
+			const type = typeof schema.type === "string" ? schema.type : "";
+			if (type === "integer" || type === "number") {
+				args[name] = Number(rawValue);
+			} else if (type === "boolean") {
+				args[name] = Boolean(rawValue);
+			} else if (type === "array" || type === "object") {
+				args[name] = typeof rawValue === "string" ? JSON.parse(rawValue) : rawValue;
+			} else {
+				args[name] = rawValue;
+			}
+		}
+
+		return args;
+	}
+
+	function updateManualDraft(toolId: string, key: string, value: string | boolean) {
+		manualArgumentDrafts = {
+			...manualArgumentDrafts,
+			[toolId]: {
+				...(manualArgumentDrafts[toolId] ?? {}),
+				[key]: value,
+			},
+		};
+	}
+
+	const AUTO_MANAGED_FIELDS = new Set(["audio_path", "input_image_paths", "output_path", "transcript_path", "diarization_path"]);
+
+	function inferAssetType(file: File): string {
+		if (file.type.startsWith("image/")) return "image";
+		if (file.type.startsWith("video/")) return "video";
+		if (file.type.startsWith("audio/")) return "audio";
+		if (
+			file.type.startsWith("text/") ||
+			file.type.includes("pdf") ||
+			file.type.includes("json") ||
+			file.type.includes("document")
+		) {
+			return "document";
+		}
+		return "binary";
+	}
+
+	function projectAssetToAttachment(asset: ProjectAsset, versionIdOverride?: string): ConversationAttachment | null {
+		const assetVersionId = versionIdOverride ?? asset.latest_version_id;
+		if (!assetVersionId) return null;
+		const signedUrl = typeof asset.metadata?.signed_url === "string" ? asset.metadata.signed_url : null;
+		return {
+			asset_id: asset.id,
+			asset_version_id: assetVersionId,
+			display_name: asset.display_name,
+			asset_type: asset.asset_type,
+			mime_type: asset.mime_type,
+			signed_url: signedUrl,
+			preview_kind: inferPreviewKind(asset.mime_type ?? asset.asset_type),
+			storage_path: asset.library_path,
+		};
+	}
+
+	function inferPreviewKind(value: string): string {
+		const lowered = value.toLowerCase();
+		if (lowered.startsWith("image/") || lowered.includes("image")) return "image";
+		if (lowered.startsWith("video/") || lowered.includes("video")) return "video";
+		if (lowered.startsWith("audio/") || lowered.includes("audio")) return "audio";
+		if (
+			lowered.startsWith("text/") ||
+			lowered.includes("pdf") ||
+			lowered.includes("json") ||
+			lowered.includes("markdown") ||
+			lowered.includes("document")
+		) {
+			return "document";
+		}
+		return "file";
+	}
+
+	function createLocalMessage(
+		id: string,
+		role: "user" | "assistant",
+		content: string,
+		attachments: ConversationAttachment[] = [],
+	): ChatMessage {
+		return {
+			id,
+			eventType: role === "user" ? "user_message" : "assistant_message",
+			role,
+			name: null,
+			content,
+			payload: {},
+			assetVersionId: null,
+			attachments,
+			toolInvocation: null,
+			toolResult: null,
+			preview: attachments[0] ?? null,
+			createdAt: new Date().toISOString(),
+		};
+	}
+
+	function isRecord(value: unknown): value is Record<string, unknown> {
+		return !!value && typeof value === "object" && !Array.isArray(value);
+	}
+
+	function appendConversationItem(item: ChatMessage) {
+		if (
+			item.eventType === "asset" &&
+			item.assetVersionId &&
+			localMessages.some(
+				(message) =>
+					message.assetVersionId === item.assetVersionId ||
+					message.attachments.some((attachment) => attachment.asset_version_id === item.assetVersionId) ||
+					message.toolResult?.assets.some((attachment) => attachment.asset_version_id === item.assetVersionId),
+			)
+		) {
+			return;
+		}
+		localMessages = [...localMessages, item];
 	}
 
 	function queueWorkflowPrompt(step: WorkflowStep) {
@@ -676,6 +974,105 @@ const SUGGESTIONS = [
 	</div>
 {/snippet}
 
+{#snippet manualToolRunner()}
+	{#if activeManualTool}
+		<div class="border-b border-[var(--shell-border-soft)] px-4 py-3">
+			<div class={surfaceVariants({ tone: "muted", radius: "block", padding: "md", emphasis: "flat" })}>
+				<div class="flex flex-wrap items-center justify-between gap-3">
+					<div>
+						<p class={metricLabelClass}>Manual tool runner</p>
+						<p class="mt-1 text-sm font-medium">Run one checked MCP tool directly inside this thread.</p>
+					</div>
+					<select
+						class="rounded-xl border border-[var(--shell-border-soft)] bg-background px-3 py-2 text-sm"
+						value={activeManualTool.id}
+						onchange={(event) =>
+							agentPanelState.setActiveManualTool((event.currentTarget as HTMLSelectElement).value)}
+					>
+						{#each enabledTools as tool (tool.id)}
+							<option value={tool.id}>{tool.server} · {tool.name}</option>
+						{/each}
+					</select>
+				</div>
+
+				<div class="mt-3 grid gap-3 md:grid-cols-2">
+					{#each Object.entries((activeManualTool.inputSchema.properties as Record<string, unknown>) ?? {}) as [name, schemaValue] (name)}
+						{@const schema = isRecord(schemaValue) ? schemaValue : {}}
+						<div class="space-y-1.5">
+							<label
+								for={`tool-field-${activeManualTool.id}-${name}`}
+								class="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground"
+							>
+								{name}
+							</label>
+							{#if AUTO_MANAGED_FIELDS.has(name)}
+								<div class="rounded-xl border border-dashed border-[var(--shell-border-soft)] bg-background px-3 py-2 text-xs text-muted-foreground">
+									Auto-managed from selected attachments or generated output paths.
+								</div>
+							{:else if schema.type === "boolean"}
+								<label class="flex items-center gap-2 rounded-xl border border-[var(--shell-border-soft)] bg-background px-3 py-2 text-sm">
+									<input
+										type="checkbox"
+										checked={Boolean(manualArgumentDrafts[activeManualTool.id]?.[name])}
+										onchange={(event) =>
+											updateManualDraft(
+												activeManualTool.id,
+												name,
+												(event.currentTarget as HTMLInputElement).checked,
+											)}
+									/>
+									Enable
+								</label>
+							{:else if schema.type === "array" || schema.type === "object"}
+								<textarea
+									id={`tool-field-${activeManualTool.id}-${name}`}
+									class="min-h-24 w-full rounded-xl border border-[var(--shell-border-soft)] bg-background px-3 py-2 text-sm"
+									placeholder={schema.type === "array" ? '["value"]' : '{"key":"value"}'}
+									value={String(manualArgumentDrafts[activeManualTool.id]?.[name] ?? "")}
+									oninput={(event) =>
+										updateManualDraft(
+											activeManualTool.id,
+											name,
+											(event.currentTarget as HTMLTextAreaElement).value,
+										)}
+								></textarea>
+							{:else}
+								<input
+									id={`tool-field-${activeManualTool.id}-${name}`}
+									class="w-full rounded-xl border border-[var(--shell-border-soft)] bg-background px-3 py-2 text-sm"
+									type={schema.type === "number" || schema.type === "integer" ? "number" : "text"}
+									placeholder={typeof schema.description === "string" ? schema.description : name}
+									value={String(manualArgumentDrafts[activeManualTool.id]?.[name] ?? "")}
+									oninput={(event) =>
+										updateManualDraft(
+											activeManualTool.id,
+											name,
+											(event.currentTarget as HTMLInputElement).value,
+										)}
+								/>
+							{/if}
+						</div>
+					{/each}
+				</div>
+
+				<div class="mt-3 flex flex-wrap items-center justify-between gap-3">
+					<div class="text-xs text-muted-foreground">
+						Using {composerAttachments.length} selected attachment{composerAttachments.length === 1 ? "" : "s"}.
+					</div>
+					<Button
+						class="rounded-xl"
+						disabled={runningManualTool || !activeManualTool}
+						onclick={handleManualToolRun}
+					>
+						<CheckSquare class="size-4" />
+						{runningManualTool ? "Running..." : "Run selected tool"}
+					</Button>
+				</div>
+			</div>
+		</div>
+	{/if}
+{/snippet}
+
 <div
 	class={workspaceFrameClass}
 >
@@ -789,11 +1186,21 @@ const SUGGESTIONS = [
 		</div>
 	{/if}
 
+	{#if enabledTools.length > 0}
+		{@render manualToolRunner()}
+	{/if}
+
 	<div class="min-h-0 flex-1 overflow-hidden">
 		<ConversationBlock
 			messages={localMessages}
 			{isLoading}
 			onSend={handleSend}
+			attachments={composerAttachments}
+			availableAttachments={availableAttachments}
+			{attachmentsLoading}
+			onAttachFiles={handleAttachFiles}
+			onToggleAttachment={toggleComposerAttachment}
+			onRemoveAttachment={removeComposerAttachment}
 			showMessages={true}
 			disabled={!canStartChats}
 			disabledMessage={composerHelper}

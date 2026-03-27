@@ -11,7 +11,7 @@
 	import { agentPanelState } from "$lib/stores/agent-panel.svelte";
 	import { projectStore } from "$lib/stores/project.svelte";
 	import { workspaceSearchStore } from "$lib/stores/workspace-search.svelte";
-	import type { ChatSession, Project } from "$lib/api/projects";
+	import type { ChatSession, Project, ToolDescriptor } from "$lib/api/projects";
 	import { cn } from "$lib/utils.js";
 	import { ChevronRight, Search, Sparkles } from "@lucide/svelte";
 	import OverviewPage from "../../app/+page.svelte";
@@ -59,6 +59,38 @@
 			updated_at: "2026-03-24T00:00:00Z",
 		},
 	];
+	const previewTools: ToolDescriptor[] = [
+		{
+			id: "generate_text",
+			name: "generate_text",
+			server: "Generation",
+			description: "Generate text from a prompt using the configured LLM provider.",
+			inputSchema: { properties: { prompt: { type: "string" } }, required: ["prompt"] },
+			outputHints: ["text"],
+			enabled: true,
+			supportsFiles: false,
+		},
+		{
+			id: "generate_image",
+			name: "generate_image",
+			server: "Generation",
+			description: "Generate an image from a prompt and return a stored output asset.",
+			inputSchema: { properties: { prompt: { type: "string" }, output_path: { type: "string" } } },
+			outputHints: ["image"],
+			enabled: true,
+			supportsFiles: true,
+		},
+		{
+			id: "transcribe_audio",
+			name: "transcribe_audio",
+			server: "Audio",
+			description: "Transcribe an uploaded audio file to text with timing segments.",
+			inputSchema: { properties: { audio_path: { type: "string" } }, required: ["audio_path"] },
+			outputHints: ["audio", "json", "text"],
+			enabled: false,
+			supportsFiles: true,
+		},
+	];
 
 	const statusMeta = $derived(workspaceStatusTone(projectStore.status, projectStore.statusMessage));
 	const routeMeta = $derived(getRouteMeta(scenario));
@@ -73,6 +105,9 @@
 			lastError: projectStore.lastError,
 			isInitialized: projectStore.isInitialized,
 			panelOpen: agentPanelState.isOpen,
+			tools: agentPanelState.tools,
+			loadedProjectId: agentPanelState.loadedProjectId,
+			activeManualToolId: agentPanelState.activeManualToolId,
 			searchQuery: workspaceSearchStore.query,
 		};
 
@@ -85,6 +120,8 @@
 		projectStore.isInitialized = true;
 		workspaceSearchStore.clear();
 		agentPanelState.open();
+		agentPanelState.setTools(previewProject.id, previewTools);
+		agentPanelState.setActiveManualTool("generate_text");
 
 		return () => {
 			projectStore.currentProject = previous.currentProject;
@@ -95,6 +132,9 @@
 			projectStore.lastError = previous.lastError;
 			projectStore.isInitialized = previous.isInitialized;
 			agentPanelState.isOpen = previous.panelOpen;
+			agentPanelState.tools = previous.tools;
+			agentPanelState.loadedProjectId = previous.loadedProjectId;
+			agentPanelState.activeManualToolId = previous.activeManualToolId;
 			workspaceSearchStore.query = previous.searchQuery;
 		};
 	});

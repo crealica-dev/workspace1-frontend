@@ -28,10 +28,69 @@ export type SessionEvent = {
 	project_id: string;
 	session_id: string;
 	owner_user_id: string;
+	auth_session_id?: string;
 	event_type: string;
 	role: string | null;
+	name?: string | null;
 	content: string | null;
+	job_id?: string | null;
+	asset_version_id?: string | null;
+	payload: Record<string, unknown>;
+	metadata: Record<string, unknown>;
 	created_at: string | null;
+};
+
+export type ConversationAttachment = {
+	key?: string | null;
+	asset_id?: string | null;
+	asset_version_id: string;
+	display_name: string;
+	asset_type: string;
+	mime_type: string | null;
+	size_bytes?: number | null;
+	signed_url?: string | null;
+	preview_kind?: string | null;
+	storage_path?: string | null;
+};
+
+export type ToolDescriptor = {
+	id: string;
+	name: string;
+	server: string;
+	description: string;
+	inputSchema: Record<string, unknown>;
+	outputHints: string[];
+	enabled: boolean;
+	supportsFiles: boolean;
+};
+
+export type ToolInvocation = {
+	tool_name: string;
+	arguments: Record<string, unknown>;
+	attachment_version_ids: string[];
+};
+
+export type ToolResult = {
+	tool_name: string;
+	value: unknown;
+	content: string;
+	text?: string | null;
+	assets: ConversationAttachment[];
+};
+
+export type ConversationItem = {
+	id: string;
+	eventType: string;
+	role: 'user' | 'assistant' | 'tool' | null;
+	name: string | null;
+	content: string;
+	payload: Record<string, unknown>;
+	assetVersionId: string | null;
+	attachments: ConversationAttachment[];
+	toolInvocation: ToolInvocation | null;
+	toolResult: ToolResult | null;
+	preview: ConversationAttachment | null;
+	createdAt: string | null;
 };
 
 export type ProjectAsset = {
@@ -66,6 +125,13 @@ export type AssetVersion = {
 export type AssetUploadResponse = {
 	asset: ProjectAsset;
 	asset_version: AssetVersion;
+};
+
+export type ToolRunResponse = {
+	tool_call_event: SessionEvent;
+	tool_result_event: SessionEvent;
+	asset_events: SessionEvent[];
+	result: Record<string, unknown>;
 };
 
 export type BackendHealth = {
@@ -265,6 +331,36 @@ async function fetchWithAuth(path: string, token: string, init: RequestInit = {}
 	return res;
 }
 
+async function fetchWithAuthTimeout(
+	path: string,
+	token: string,
+	timeoutMs: number,
+	init: RequestInit = {},
+): Promise<Response> {
+	const controller = new AbortController();
+	const timer = setTimeout(() => controller.abort(new Error(`Request timed out after ${timeoutMs}ms`)), timeoutMs);
+
+	try {
+		return await fetchWithAuth(path, token, {
+			...init,
+			signal: controller.signal,
+		});
+	} catch (error) {
+		if (error instanceof Error && error.name === 'AbortError') {
+			throw new WorkspaceApiError({
+				kind: 'network',
+				path,
+				message: error.message,
+				detail: error.message,
+				userMessage: 'The MCP tool catalog timed out while loading. Please retry.',
+			});
+		}
+		throw error;
+	} finally {
+		clearTimeout(timer);
+	}
+}
+
 async function fetchWithoutAuth(path: string, init: RequestInit = {}): Promise<Response> {
 	let res: Response;
 
@@ -416,6 +512,31 @@ export async function listSessionEvents(
 	return res.json();
 }
 
+export async function listMcpTools(
+	projectId: string,
+	token: string,
+): Promise<ToolDescriptor[]> {
+	const res = await fetchWithAuthTimeout(`/projects/${projectId}/mcp/tools`, token, 10000);
+	return res.json();
+}
+
+export async function runSessionTool(
+	projectId: string,
+	sessionId: string,
+	token: string,
+	body: {
+		tool_name: string;
+		arguments: Record<string, unknown>;
+		attachment_version_ids: string[];
+	},
+): Promise<ToolRunResponse> {
+	const res = await fetchWithAuth(`/projects/${projectId}/sessions/${sessionId}/tools/run`, token, {
+		method: 'POST',
+		body: JSON.stringify(body),
+	});
+	return res.json();
+}
+
 export async function createSessionEvent(
 	projectId: string,
 	sessionId: string,
@@ -436,8 +557,11 @@ export async function createSessionEvent(
 
 export type ChatStreamCallbacks = {
 	onChunk: (text: string) => void;
-	onUserEvent?: (eventId: string) => void;
-	onDone?: (eventId: string, fullText: string) => void;
+	onUserEvent?: (event: SessionEvent) => void;
+	onAsset?: (event: SessionEvent) => void;
+	onToolCall?: (event: SessionEvent) => void;
+	onToolResult?: (event: SessionEvent) => void;
+	onDone?: (event: SessionEvent, fullText: string) => void;
 	onError?: (message: string) => void;
 };
 
@@ -450,11 +574,19 @@ export async function streamChat(
 	sessionId: string,
 	message: string,
 	token: string,
+	options: {
+		enabledTools?: string[];
+		attachmentVersionIds?: string[];
+	} = {},
 	callbacks: ChatStreamCallbacks,
 ): Promise<void> {
 	const res = await fetchWithAuth(`/projects/${projectId}/sessions/${sessionId}/chat`, token, {
 		method: 'POST',
-		body: JSON.stringify({ message }),
+		body: JSON.stringify({
+			message,
+			enabled_tools: options.enabledTools ?? [],
+			attachment_version_ids: options.attachmentVersionIds ?? [],
+		}),
 	});
 
 	if (!res.body) {
@@ -489,9 +621,15 @@ export async function streamChat(
 				if (eventName === 'delta') {
 					callbacks.onChunk(payload.text ?? '');
 				} else if (eventName === 'user_event') {
-					callbacks.onUserEvent?.(payload.event_id);
+					if (payload.event) callbacks.onUserEvent?.(payload.event as SessionEvent);
+				} else if (eventName === 'asset') {
+					if (payload.event) callbacks.onAsset?.(payload.event as SessionEvent);
+				} else if (eventName === 'tool_call') {
+					if (payload.event) callbacks.onToolCall?.(payload.event as SessionEvent);
+				} else if (eventName === 'tool_result') {
+					if (payload.event) callbacks.onToolResult?.(payload.event as SessionEvent);
 				} else if (eventName === 'done') {
-					callbacks.onDone?.(payload.event_id, payload.text ?? '');
+					if (payload.event) callbacks.onDone?.(payload.event as SessionEvent, payload.text ?? '');
 				} else if (eventName === 'error') {
 					callbacks.onError?.(payload.message ?? 'Unknown error');
 				}
@@ -500,4 +638,84 @@ export async function streamChat(
 			}
 		}
 	}
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+	return !!value && typeof value === 'object' && !Array.isArray(value);
+}
+
+export function asConversationAttachment(value: unknown): ConversationAttachment | null {
+	if (!isRecord(value)) return null;
+	if (typeof value.asset_version_id !== 'string') return null;
+	return {
+		key: typeof value.key === 'string' ? value.key : null,
+		asset_id: typeof value.asset_id === 'string' ? value.asset_id : null,
+		asset_version_id: value.asset_version_id,
+		display_name: typeof value.display_name === 'string' ? value.display_name : 'Attachment',
+		asset_type: typeof value.asset_type === 'string' ? value.asset_type : 'binary',
+		mime_type: typeof value.mime_type === 'string' ? value.mime_type : null,
+		size_bytes: typeof value.size_bytes === 'number' ? value.size_bytes : null,
+		signed_url: typeof value.signed_url === 'string' ? value.signed_url : null,
+		preview_kind: typeof value.preview_kind === 'string' ? value.preview_kind : null,
+		storage_path: typeof value.storage_path === 'string' ? value.storage_path : null,
+	};
+}
+
+export function mapSessionEventToConversationItem(event: SessionEvent): ConversationItem {
+	const payload = isRecord(event.payload) ? event.payload : {};
+	const payloadAssets = Array.isArray(payload.assets)
+		? payload.assets.map(asConversationAttachment).filter((item): item is ConversationAttachment => !!item)
+		: [];
+	const directAttachment = asConversationAttachment(payload);
+	const attachments =
+		event.event_type === 'asset'
+			? directAttachment
+				? [directAttachment]
+				: []
+			: payloadAssets;
+	const toolName =
+		typeof payload.tool_name === 'string'
+			? payload.tool_name
+			: typeof event.name === 'string'
+				? event.name
+				: null;
+
+	return {
+		id: event.id,
+		eventType: event.event_type,
+		role:
+			event.role === 'user' || event.role === 'assistant' || event.role === 'tool'
+				? event.role
+				: null,
+		name: typeof event.name === 'string' ? event.name : null,
+		content: event.content ?? (typeof payload.content === 'string' ? payload.content : ''),
+		payload,
+		assetVersionId: event.asset_version_id ?? null,
+		attachments,
+		toolInvocation:
+			event.event_type === 'tool_call' && toolName
+				? {
+						tool_name: toolName,
+						arguments: isRecord(payload.arguments) ? payload.arguments : {},
+						attachment_version_ids: Array.isArray(payload.attachment_version_ids)
+							? payload.attachment_version_ids.filter((item): item is string => typeof item === 'string')
+							: [],
+					}
+				: null,
+		toolResult:
+			event.event_type === 'tool_result' && toolName
+				? {
+						tool_name: toolName,
+						value: payload.value,
+						content:
+							typeof payload.content === 'string'
+								? payload.content
+								: event.content ?? '',
+						text: typeof payload.text === 'string' ? payload.text : null,
+						assets: payloadAssets,
+					}
+				: null,
+		preview: attachments[0] ?? null,
+		createdAt: event.created_at,
+	};
 }

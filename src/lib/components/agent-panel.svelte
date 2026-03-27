@@ -17,6 +17,7 @@
 	let toolRailVisible = $state(false);
 
 	const isOpen = $derived(agentPanelState.isOpen);
+	const enabledToolCount = $derived(agentPanelState.enabledToolIds.length);
 
 	function onResizePointerDown(e: PointerEvent) {
 		isDragging = true;
@@ -62,7 +63,12 @@
 		>
 			<div class="shrink-0 border-b border-[var(--shell-border-soft)] px-3 py-2">
 				<div class="flex items-center justify-between gap-2">
-					<p class={metricLabelClass}>Active tools</p>
+					<div>
+						<p class={metricLabelClass}>MCP tools</p>
+						<p class="mt-1 text-xs text-muted-foreground">
+							{enabledToolCount} enabled
+						</p>
+					</div>
 					<button
 						type="button"
 						aria-label={toolRailVisible ? "Collapse tool rail" : "Expand tool rail"}
@@ -76,18 +82,45 @@
 					</button>
 				</div>
 				{#if toolRailVisible}
-					<div class="mt-2 flex flex-wrap gap-1.5">
-						{#each ["Transcription", "Image gen", "Text gen"] as tool (tool)}
-							<span
-								class={cn(
-									interactiveItemVariants({ tone: "pill", density: "compact" }),
-									"pointer-events-none inline-flex items-center gap-1.5 text-xs font-medium",
-								)}
-							>
-								<span class="inline-block size-1.5 rounded-full bg-green-500"></span>
-								{tool}
-							</span>
-						{/each}
+					<div class="mt-3 space-y-2">
+						{#if agentPanelState.toolsLoading}
+							<p class="text-xs text-muted-foreground">Loading MCP tool catalog…</p>
+						{:else if agentPanelState.toolsError}
+							<p class="text-xs text-amber-700 dark:text-amber-200">{agentPanelState.toolsError}</p>
+						{:else if agentPanelState.tools.length}
+							<div class="max-h-44 space-y-1 overflow-y-auto pr-1">
+								{#each agentPanelState.tools as tool (tool.id)}
+									<label
+										class={cn(
+											interactiveItemVariants({ tone: tool.enabled ? "selected" : "row", density: "compact" }),
+											"flex w-full items-start gap-2 rounded-xl px-2.5 py-2 text-left",
+										)}
+									>
+										<input
+											type="checkbox"
+											class="mt-0.5"
+											checked={tool.enabled}
+											onchange={() => agentPanelState.toggleTool(tool.id)}
+										/>
+										<div class="min-w-0 flex-1">
+											<div class="flex items-center gap-2">
+												<p class="truncate text-sm font-medium">{tool.name}</p>
+												<span class="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-primary">
+													{tool.server}
+												</span>
+											</div>
+											<p class="mt-1 line-clamp-2 text-xs text-muted-foreground">
+												{tool.description}
+											</p>
+										</div>
+									</label>
+								{/each}
+							</div>
+						{:else}
+							<p class="text-xs text-muted-foreground">
+								No MCP tools are available yet for this project.
+							</p>
+						{/if}
 					</div>
 				{/if}
 			</div>
