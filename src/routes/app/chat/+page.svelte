@@ -8,7 +8,6 @@
 		interactiveItemVariants,
 		metricLabelClass,
 		sectionTitleClass,
-		supportingCopyClass,
 		surfaceVariants,
 	} from "$lib/design/index.js";
 	import { assistantIntentState } from "$lib/stores/assistant-intent.svelte";
@@ -107,10 +106,6 @@
 						<Badge variant="outline" class={eyebrowBadgeClass}>Chat desk</Badge>
 						<div class="space-y-2">
 							<h1 class="text-3xl font-semibold tracking-tight sm:text-4xl">Chat</h1>
-							<p class={supportingCopyClass}>
-								Use the right column for the live conversation. Keep context, shortcuts, and
-								next-step staging here in the middle.
-							</p>
 						</div>
 					</div>
 
@@ -159,10 +154,6 @@
 
 			<div class="grid gap-4">
 				<Card.Root class={moduleSurfaceClass}>
-					<Card.Header class="space-y-2">
-						<Card.Title class={sectionTitleClass}>Supporting surfaces</Card.Title>
-						<Card.Description>Move out of chat only when it helps.</Card.Description>
-					</Card.Header>
 					<Card.Content class="grid gap-2">
 						<Button href="/app/library" variant="ghost" class="justify-between rounded-2xl">
 							<span class="inline-flex items-center gap-2">

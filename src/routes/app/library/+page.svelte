@@ -13,10 +13,7 @@
 	import * as Card from "$lib/components/ui/card/index.js";
 	import { Input } from "$lib/components/ui/input/index.js";
 	import {
-		eyebrowBadgeClass,
 		interactiveItemVariants,
-		metricLabelClass,
-		supportingCopyClass,
 		surfaceVariants,
 	} from "$lib/design/index.js";
 	import ProjectCreateModal from "$lib/components/project-create-modal.svelte";
@@ -275,18 +272,6 @@
 		padding: "lg",
 		emphasis: "soft",
 	});
-	const noteSurfaceClass = surfaceVariants({
-		tone: "panel",
-		radius: "panel",
-		padding: "md",
-		emphasis: "soft",
-	});
-	const metricSurfaceClass = surfaceVariants({
-		tone: "elevated",
-		radius: "block",
-		padding: "md",
-		emphasis: "flat",
-	});
 	const panelSurfaceClass = cn(
 		surfaceVariants({
 			tone: "panel",
@@ -296,12 +281,6 @@
 		}),
 		"ring-0",
 	);
-	const mutedBlockClass = surfaceVariants({
-		tone: "muted",
-		radius: "block",
-		padding: "md",
-		emphasis: "flat",
-	});
 	const previewFrameClass = cn(
 		surfaceVariants({
 			tone: "muted",
@@ -665,39 +644,42 @@
 <div class="flex h-full min-h-0 flex-col overflow-hidden">
 	<div class="min-h-0 flex-1 overflow-y-auto pr-1">
 		<div class="flex flex-col gap-6">
-			<section class="grid gap-4 xl:grid-cols-[minmax(0,1.55fr)_minmax(320px,0.95fr)]">
+			<section class="pb-2">
 		<Card.Root class={heroSurfaceClass}>
-			<Card.Content class="flex h-full flex-col gap-6 p-6 sm:p-7">
-				<div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-					<div class="space-y-3">
-						<Badge variant="outline" class={eyebrowBadgeClass}>
-							Supporting surface
-						</Badge>
-						<div class="space-y-2">
-							<h1 class="text-3xl font-semibold tracking-tight sm:text-4xl">
-								{currentProject?.name ?? "Project library"}
-							</h1>
-							<p class={cn(supportingCopyClass, "max-w-2xl sm:text-base")}>
-								Start in chat, then use the library to inspect uploads, generated assets, and
-								reference material without losing the active project thread. The header search
-								filters this page across file names, folder paths, sources, and asset types.
-							</p>
+			<Card.Content class="flex flex-col gap-4 p-5 sm:p-6 lg:flex-row lg:items-center lg:justify-between">
+				<div class="space-y-1.5">
+					<h2 class="text-xl font-semibold tracking-tight">
+						{currentProject?.name ?? "Project library"}
+					</h2>
+					<div class="flex flex-wrap items-center gap-5 text-sm">
+						<div>
+							<span class="text-lg font-semibold tabular-nums">{sortedAssets.length}</span>
+							<span class="ml-1 text-muted-foreground">assets</span>
+						</div>
+						<div>
+							<span class="text-lg font-semibold tabular-nums">{totalFolderCount}</span>
+							<span class="ml-1 text-muted-foreground">folders</span>
+						</div>
+						<div>
+							<span class="text-lg font-semibold tabular-nums">{previewableCount}</span>
+							<span class="ml-1 text-muted-foreground">preview-ready</span>
 						</div>
 					</div>
+				</div>
 
-					<div class="flex flex-wrap items-center gap-2">
-						<input
-							bind:this={fileInput}
-							type="file"
-							multiple
-							class="hidden"
-							onchange={handleUploadSelection}
-						/>
-						<Button
-							class="gap-2 rounded-full px-4"
-							disabled={workspaceStatus !== "ready" || uploading}
-							onclick={() => fileInput?.click()}
-						>
+				<div class="flex flex-wrap items-center gap-2">
+					<input
+						bind:this={fileInput}
+						type="file"
+						multiple
+						class="hidden"
+						onchange={handleUploadSelection}
+					/>
+					<Button
+						class="gap-2 rounded-full px-4"
+						disabled={workspaceStatus !== "ready" || uploading}
+						onclick={() => fileInput?.click()}
+					>
 							<Upload class="size-4" />
 							{uploading ? "Uploading..." : "Upload assets"}
 						</Button>
@@ -720,85 +702,17 @@
 								)}
 						>
 							<Sparkles class="size-4" />
-							Chat
-						</Button>
-					</div>
-				</div>
-
-				<div class="grid gap-3 md:grid-cols-3">
-					<div class={metricSurfaceClass}>
-						<p class={metricLabelClass}>
-							Assets
-						</p>
-						<p class="mt-3 text-3xl font-semibold tracking-tight">{sortedAssets.length}</p>
-						<p class="mt-1 text-sm leading-6 text-muted-foreground">
-							All project uploads and generated files stay grouped here.
-						</p>
-					</div>
-					<div class={metricSurfaceClass}>
-						<p class={metricLabelClass}>
-							Folders
-						</p>
-						<p class="mt-3 text-3xl font-semibold tracking-tight">{totalFolderCount}</p>
-						<p class="mt-1 text-sm leading-6 text-muted-foreground">
-							Keep related files together by organizing them into named folders.
-						</p>
-					</div>
-					<div class={metricSurfaceClass}>
-						<p class={metricLabelClass}>
-							Preview-ready
-						</p>
-						<p class="mt-3 text-3xl font-semibold tracking-tight">{previewableCount}</p>
-						<p class="mt-1 text-sm leading-6 text-muted-foreground">
-							Assets with inline previews — images, audio, and video — are ready to review.
-						</p>
-					</div>
-				</div>
-			</Card.Content>
-		</Card.Root>
-
-		<Card.Root class={noteSurfaceClass}>
-			<Card.Header>
-				<Card.Title>Library status</Card.Title>
-				<Card.Description>
-					Your active upload folder, current search filter, and project context.
-				</Card.Description>
-			</Card.Header>
-			<Card.Content class="space-y-3">
-				<div class={mutedBlockClass}>
-					<p class={metricLabelClass}>
-						Active search
-					</p>
-					<p class="mt-2 text-sm font-medium leading-6">
-						{workspaceSearchStore.query
-							? `"${workspaceSearchStore.query}"`
-							: "No filter active"}
-					</p>
-					<p class="mt-1 text-sm leading-6 text-muted-foreground">
-						Matches asset names, folder paths, file types, and sources.
-					</p>
-				</div>
-
-				<div class={mutedBlockClass}>
-					<p class={metricLabelClass}>
-						Upload target
-					</p>
-					<p class="mt-2 text-sm font-medium leading-6">
-						{uploadTargetFolder ?? "Library root"}
-					</p>
-					<p class="mt-1 text-sm leading-6 text-muted-foreground">
-						New uploads land here. Select a folder in the panel or type a path above.
-					</p>
+						Chat
+					</Button>
 				</div>
 			</Card.Content>
 		</Card.Root>
 	</section>
 
-	<section id="library" class="grid gap-4 xl:grid-cols-[260px_minmax(0,1fr)_340px]">
+	<section id="library" class="grid gap-4 xl:grid-cols-[200px_minmax(0,1fr)_280px]">
 		<Card.Root class={panelSurfaceClass}>
 			<Card.Header>
 				<Card.Title>Folder structure</Card.Title>
-				<Card.Description>Browse root files, nested folders, and source-specific slices.</Card.Description>
 			</Card.Header>
 			<Card.Content class="space-y-5">
 				<div class="space-y-2">
@@ -877,9 +791,6 @@
 				<div class="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
 					<div class="space-y-1">
 						<Card.Title>Asset browser</Card.Title>
-						<Card.Description>
-							{visibleAssets.length} result{visibleAssets.length === 1 ? "" : "s"} shown in {activeFolderLabel}.
-						</Card.Description>
 					</div>
 					<div class="flex items-center gap-2">
 						<Button
@@ -906,6 +817,9 @@
 							placeholder="campaigns/spring-launch"
 							class="h-10 rounded-xl"
 						/>
+						<p class="truncate text-xs text-muted-foreground">
+							studio-assets / {currentProject?.id ?? "…"} / library / {uploadTargetFolder ?? "root"}
+						</p>
 					</div>
 					<div class="flex items-end gap-2">
 						<Button
@@ -930,7 +844,7 @@
 					<div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
 						{#each Array.from({ length: 6 }) as _, index (index)}
 							<div class={previewFrameClass}>
-								<div class="aspect-[4/3] animate-pulse rounded-2xl bg-muted"></div>
+								<div class="aspect-[3/2] animate-pulse rounded-2xl bg-muted"></div>
 								<div class="mt-3 space-y-2">
 									<div class="h-4 w-2/3 animate-pulse rounded bg-muted"></div>
 									<div class="h-3 w-1/2 animate-pulse rounded bg-muted"></div>
@@ -984,7 +898,7 @@
 									selectedAssetId = asset.id;
 								}}
 							>
-								<div class="aspect-[4/3] border-b border-[var(--shell-border-soft)] bg-[var(--surface-muted)] p-3">
+								<div class="aspect-[3/2] border-b border-[var(--shell-border-soft)] bg-[var(--surface-muted)] p-3">
 									{#if assetKind === "image" && assetPreviewUrl}
 										<img
 											src={assetPreviewUrl}
@@ -1008,24 +922,16 @@
 										</div>
 									{/if}
 								</div>
-								<div class="space-y-3 p-4">
-									<div class="flex flex-wrap items-center gap-2">
-										<Badge variant="outline" class={getAssetKindBadgeClass(assetKind)}>
+								<div class="space-y-2 p-3">
+									<div class="flex items-center gap-2">
+										<Badge variant="outline" class={cn("shrink-0", getAssetKindBadgeClass(assetKind))}>
 											{getAssetKindLabel(assetKind)}
 										</Badge>
-										<Badge variant="outline" class={quietBadgeClass}>
-											{humanizeSource(getAssetSource(asset))}
-										</Badge>
-									</div>
-									<div class="space-y-1.5">
-										<p class="truncate text-sm font-semibold">{asset.display_name}</p>
-										<p class="truncate text-xs text-muted-foreground">
-											{getAssetFolder(asset) || "Library root"}
-										</p>
+										<p class="min-w-0 flex-1 truncate text-sm font-semibold">{asset.display_name}</p>
 									</div>
 									<div class="flex items-center justify-between gap-3 text-xs text-muted-foreground">
 										<span class="truncate">{asset.mime_type ?? asset.asset_type}</span>
-										<span>{formatDate(asset.updated_at ?? asset.created_at)}</span>
+										<span class="shrink-0">{formatDate(asset.updated_at ?? asset.created_at)}</span>
 									</div>
 								</div>
 							</button>
@@ -1039,9 +945,6 @@
 			<Card.Root class={panelSurfaceClass}>
 				<Card.Header>
 					<Card.Title>Preview</Card.Title>
-					<Card.Description>
-						Inspect the selected asset, confirm folder placement, and reuse it in chat.
-					</Card.Description>
 				</Card.Header>
 				<Card.Content class="space-y-4">
 					{#if selectedAsset}
@@ -1054,7 +957,7 @@
 								<img
 									src={selectedAssetPreviewUrl}
 									alt={selectedAsset.display_name}
-									class="aspect-[4/3] w-full rounded-2xl object-cover"
+									class="aspect-[3/2] w-full rounded-2xl object-cover"
 								/>
 							{:else if selectedAssetKind === "video" && selectedAssetPreviewUrl}
 								<video
@@ -1062,10 +965,10 @@
 									muted
 									playsinline
 									preload="metadata"
-									class="aspect-[4/3] w-full rounded-2xl bg-black object-contain"
+									class="aspect-[3/2] w-full rounded-2xl bg-black object-contain"
 								></video>
 							{:else if selectedAssetKind === "audio" && selectedAssetPreviewUrl}
-								<div class="flex aspect-[4/3] flex-col items-center justify-center rounded-2xl bg-background px-5 text-center">
+								<div class="flex aspect-[3/2] flex-col items-center justify-center rounded-2xl bg-background px-5 text-center">
 									<Mic class="size-8 text-muted-foreground" />
 									<p class="mt-3 text-sm font-medium">{selectedAsset.display_name}</p>
 									<audio controls class="mt-4 w-full">
@@ -1073,7 +976,7 @@
 									</audio>
 								</div>
 							{:else}
-								<div class="flex aspect-[4/3] flex-col items-center justify-center rounded-2xl bg-background text-center">
+								<div class="flex aspect-[3/2] flex-col items-center justify-center rounded-2xl bg-background text-center">
 									<SelectedAssetIcon class="size-8 text-muted-foreground" />
 									<p class="mt-3 text-sm font-medium">{selectedAsset.display_name}</p>
 									<p class="mt-1 max-w-[16rem] text-xs leading-5 text-muted-foreground">
@@ -1099,22 +1002,7 @@
 									{getAssetFolder(selectedAsset) || "Library root"}
 								</p>
 							</div>
-							<div class="grid gap-3 text-sm sm:grid-cols-2">
-								<div class={metadataSurfaceClass}>
-									<p class="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-										File type
-									</p>
-									<p class="mt-2 font-medium">{selectedAsset.mime_type ?? selectedAsset.asset_type}</p>
-								</div>
-								<div class={metadataSurfaceClass}>
-									<p class="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-										Updated
-									</p>
-									<p class="mt-2 font-medium">
-										{formatDate(selectedAsset.updated_at ?? selectedAsset.created_at)}
-									</p>
-								</div>
-							</div>
+
 						</div>
 
 						<div class="flex flex-wrap gap-2">
@@ -1149,7 +1037,6 @@
 			<Card.Root class={panelSurfaceClass}>
 				<Card.Header>
 					<Card.Title>Versions</Card.Title>
-					<Card.Description>Latest stored revisions for the current library item.</Card.Description>
 				</Card.Header>
 				<Card.Content class="space-y-3">
 					{#if versionsError}
@@ -1205,7 +1092,6 @@
 			<Card.Root class={panelSurfaceClass}>
 				<Card.Header>
 					<Card.Title>Recent sessions</Card.Title>
-					<Card.Description>Jump from the library into the latest project-aware chats.</Card.Description>
 				</Card.Header>
 				<Card.Content class="space-y-2">
 					{#if !recentSessions.length}

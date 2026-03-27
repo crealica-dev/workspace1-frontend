@@ -6,9 +6,7 @@
 		iconContainerClass,
 		iconContainerLgClass,
 		interactiveItemVariants,
-		metricLabelClass,
 		sectionTitleClass,
-		supportingCopyClass,
 		surfaceVariants,
 	} from "$lib/design/index.js";
 	import { projectStore } from "$lib/stores/project.svelte";
@@ -177,11 +175,6 @@
 			<h1 class="text-balance text-2xl font-semibold tracking-tight sm:text-3xl">
 				Welcome back, {welcomeName}
 			</h1>
-			<p class={supportingCopyClass}>
-				{currentProject?.name
-					? `Working on ${currentProject.name}. Pick up where you left off or start something new.`
-					: "Your project is warming up. Switch to Chat to get started."}
-			</p>
 		</div>
 	</section>
 

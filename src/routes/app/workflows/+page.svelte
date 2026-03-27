@@ -6,7 +6,6 @@
 		iconContainerLgClass,
 		interactiveItemVariants,
 		sectionTitleClass,
-		supportingCopyClass,
 		surfaceVariants,
 	} from "$lib/design/index.js";
 	import { assistantIntentState } from "$lib/stores/assistant-intent.svelte";
@@ -80,10 +79,6 @@
 				<div class="space-y-2">
 					<span class={eyebrowBadgeClass}>Workflows</span>
 					<h1 class="text-3xl font-semibold tracking-tight">Flow recipes</h1>
-					<p class={supportingCopyClass}>
-						Reusable recipes for the current project. Start in chat when the path is unclear,
-						then use a recipe once the next move is obvious.
-					</p>
 				</div>
 			</div>
 			<Button

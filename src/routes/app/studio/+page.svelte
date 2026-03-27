@@ -7,7 +7,6 @@
 		iconContainerLgClass,
 		interactiveItemVariants,
 		sectionTitleClass,
-		supportingCopyClass,
 		surfaceVariants,
 	} from "$lib/design/index.js";
 	import { assistantIntentState } from "$lib/stores/assistant-intent.svelte";
@@ -108,10 +107,6 @@
 				<div class="space-y-2">
 					<span class={eyebrowBadgeClass}>Studio</span>
 					<h1 class="text-3xl font-semibold tracking-tight">Tool shelf</h1>
-					<p class={supportingCopyClass}>
-						A focused tool shelf for the current project. Use chat to choose the right tool,
-						then come here when you are ready to stage the next step.
-					</p>
 				</div>
 			</div>
 			<Button

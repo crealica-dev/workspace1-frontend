@@ -9,7 +9,6 @@ import {
 eyebrowBadgeClass,
 interactiveItemVariants,
 metricLabelClass,
-supportingCopyClass,
 surfaceVariants,
 } from "$lib/design/index.js";
 import { projectStore } from "$lib/stores/project.svelte";
@@ -126,10 +125,6 @@ return cn(projectRowBase, isActive ? projectRowActive : projectRowIdle);
 <Badge variant="outline" class={eyebrowBadgeClass}>Projects</Badge>
 <div class="mt-3 space-y-1">
 <h1 class="text-3xl font-semibold tracking-tight">Your projects</h1>
-<p class={supportingCopyClass}>
-Switch between projects, rename, or delete them. Each project has its own chat
-history, sessions, and asset library.
-</p>
 </div>
 <div class="mt-4 flex flex-wrap items-center gap-3">
 <Badge variant="outline" class="rounded-full px-3 py-1 text-xs">
